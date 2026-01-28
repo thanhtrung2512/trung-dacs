@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${group.name} + ' | Chi tiết'">Chi tiết nhóm</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; --card: #ffffff; --border: #e2e8f0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 40px 20px; }
+
+        .container { 
+            max-width: 850px; margin: 0 auto; 
+            background: var(--card); border-radius: 24px; 
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.05); border: 1px solid var(--border); 
+            overflow: hidden;
+        }
+
+        .top-nav { padding: 20px 30px; border-bottom: 1px solid var(--border); display: flex; align-items: center; }
+        .back-link { text-decoration: none; color: #64748b; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
+        .back-link:hover { color: var(--primary); transform: translateX(-3px); }
+
+        .group-header { padding: 40px; display: flex; align-items: flex-start; gap: 25px; background: linear-gradient(to bottom, #ffffff, #f8fafc); }
+        .group-icon { 
+            width: 80px; height: 80px; background: #fff; border: 1px solid var(--border); border-radius: 20px; 
+            display: flex; align-items: center; justify-content: center; font-size: 40px; flex-shrink: 0; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .group-info h1 { margin: 0 0 10px 0; font-size: 26px; font-weight: 800; color: #0f172a; }
+        
+        .badges { display: flex; gap: 10px; align-items: center; }
+        .tag { background: #e0e7ff; color: var(--primary); padding: 5px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; }
+        .status-open { background: #dcfce7; color: #15803d; padding: 5px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; }
+        .status-full { background: #fee2e2; color: #991b1b; padding: 5px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; }
+
+        .content-grid { display: grid; grid-template-columns: 2fr 1fr; border-top: 1px solid var(--border); }
+        
+        .main-content { padding: 40px; border-right: 1px solid var(--border); background: white; }
+        .section-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: #334155; }
+        .description { line-height: 1.8; color: #475569; font-size: 15px; white-space: pre-line; }
+
+        .sidebar { padding: 40px; background: #fcfcfc; }
+        .meta-item { margin-bottom: 25px; }
+        .meta-label { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: 0.5px; }
+        .meta-value { font-weight: 600; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 15px; }
+
+        .progress-container { margin-top: 10px; }
+        .progress-bar { width: 100%; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); border-radius: 10px; transition: width 0.5s ease; }
+        .progress-text { font-size: 12px; color: #64748b; margin-top: 5px; text-align: right; display: block; }
+
+        .btn-join { 
+            width: 100%; padding: 16px; border: none; border-radius: 12px; 
+            background: var(--primary); color: white; font-weight: 700; font-size: 16px; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; 
+            transition: all 0.2s; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+        .btn-join:hover { background: #4338ca; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
+        .btn-disabled { background: #cbd5e1; cursor: not-allowed; transform: none !important; box-shadow: none !important; color: #64748b; }
+
+        /* Nút đã tham gia (Màu xanh lá) */
+        .btn-joined {
+            width: 100%; padding: 16px; border: 1px solid #bbf7d0; border-radius: 12px;
+            background: #dcfce7; color: #166534; font-weight: 700; font-size: 16px;
+            cursor: default; display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: none;
+        }
+
+        .success-banner {
+            background: #f0fdf4; border-bottom: 1px solid #bbf7d0; color: #166534; 
+            padding: 15px; text-align: center; font-weight: 600; display: flex; 
+            align-items: center; justify-content: center; gap: 8px;
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        @media (max-width: 768px) { .content-grid { grid-template-columns: 1fr; } .main-content { border-right: none; border-bottom: 1px solid var(--border); } }
+    </style>
+</head>
+<body>
+
+    <div th:if="${param.joined}" class="success-banner">
+        <i data-lucide="check-circle" size="20"></i> Chúc mừng! Bạn đã trở thành thành viên của nhóm.
+    </div>
+
+    <div class="container">
+        <div class="top-nav">
+            <a href="/student/history" class="back-link">
+                <i data-lucide="arrow-left" size="18"></i> Quay lại danh sách
+            </a>
+        </div>
+
+        <div class="group-header">
+            <div class="group-icon" th:text="${group.image}">☕</div>
+            <div class="group-info">
+                <h1 th:text="${group.name}">Tên Nhóm</h1>
+                <div class="badges">
+                    <span class="tag" th:text="${group.subjectTag}">TAG</span>
+                    <span class="status-open" th:if="${group.members < group.maxMembers}">Đang tuyển</span>
+                    <span class="status-full" th:unless="${group.members < group.maxMembers}">Đã đầy</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            
+            <div class="main-content">
+                <div class="section-title"><i data-lucide="file-text" size="20" color="#4f46e5"></i> Giới thiệu nhóm</div>
+                <p class="description" th:text="${group.description}">Chưa có mô tả.</p>
+
+                <div class="section-title" style="margin-top: 30px;"><i data-lucide="shield-check" size="20" color="#4f46e5"></i> Quy định chung</div>
+                <ul style="color: #475569; padding-left: 20px; line-height: 1.6; font-size: 15px;">
+                    <li>Tôn trọng các thành viên khác trong nhóm.</li>
+                    <li>Chia sẻ kiến thức liên quan đến <b th:text="${group.subjectTag}"></b>.</li>
+                    <li>Không spam hoặc gửi nội dung không phù hợp.</li>
+                </ul>
+            </div>
+
+            <div class="sidebar">
+                <div class="meta-item">
+                    <span class="meta-label">Người quản lý</span>
+                    <div class="meta-value">
+                        <i data-lucide="user-circle-2" size="18"></i>
+                        <span th:text="${creatorName}">Admin</span>
+                    </div>
+                </div>
+
+                <div class="meta-item">
+                    <span class="meta-label">Tình trạng sĩ số</span>
+                    <div class="meta-value">
+                        <i data-lucide="users" size="18"></i>
+                        <span th:text="${group.members} + ' / ' + ${group.maxMembers}"></span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" th:style="'width:' + (${group.members} * 100 / ${group.maxMembers}) + '%'"></div>
+                        </div>
+                        <span class="progress-text" th:text="${(group.members * 100 / group.maxMembers)} + '% đã lấp đầy'"></span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    
+                    <div th:if="${isJoined}">
+                        <button type="button" class="btn-joined">
+                            <i data-lucide="check-circle" size="20"></i> ĐÃ THAM GIA
+                        </button>
+                        <p style="text-align: center; font-size: 12px; color: #166534; margin-top: 8px;">
+                            Bạn đang là thành viên của nhóm này
+                        </p>
+                    </div>
+
+                    <form th:unless="${isJoined}" th:action="@{/student/groups/{id}/join(id=${group.id})}" method="post">
+                        
+                        <button th:if="${group.members < group.maxMembers}" type="submit" class="btn-join">
+                            <i data-lucide="user-plus" size="20"></i> Tham gia ngay
+                        </button>
+                        
+                        <button th:unless="${group.members < group.maxMembers}" type="button" class="btn-join btn-disabled">
+                            <i data-lucide="lock" size="20"></i> Nhóm đã đầy
+                        </button>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>

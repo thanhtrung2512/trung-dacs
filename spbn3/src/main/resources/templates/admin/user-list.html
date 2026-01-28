@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Người dùng | LMS Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* --- CORE VARIABLES --- */
+        :root {
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --sidebar-width: 260px;
+        }
+
+        /* FIX 1: Body dùng display block thay vì flex để tránh lỗi layout */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; 
+            display: block; /* Quan trọng */
+        }
+
+        /* --- SIDEBAR (FIXED) --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--surface);
+            height: 100vh;
+            position: fixed; top: 0; left: 0;
+            border-right: 1px solid var(--border);
+            padding: 32px 24px;
+            z-index: 100; /* Tăng z-index để luôn nằm trên */
+            display: flex; flex-direction: column;
+            box-sizing: border-box; /* Đảm bảo padding không làm vỡ width */
+        }
+        
+        .logo { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; gap: 10px; margin-bottom: 40px; text-decoration: none; align-items: center; }
+        .nav-link { display: flex; gap: 12px; padding: 12px; color: var(--text-sub); text-decoration: none; font-weight: 500; border-radius: 8px; margin-bottom: 4px; transition: 0.2s; align-items: center; }
+        .nav-link:hover, .nav-link.active { background: #e0e7ff; color: var(--primary); }
+        .logout-btn { margin-top: auto; color: #ef4444; }
+        .logout-btn:hover { background: #fee2e2; color: #b91c1c; }
+
+        /* --- MAIN CONTENT --- */
+        /* FIX 2: Sử dụng margin-left và width auto */
+        .main {
+            margin-left: var(--sidebar-width);
+            width: auto; /* Tự động lấp đầy phần còn lại */
+            padding: 40px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .header-container { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .title-section h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+        .title-section p { color: var(--text-sub); font-size: 14px; margin-top: 5px; }
+
+        /* --- TOOLBAR --- */
+        .toolbar {
+            display: flex; gap: 15px; align-items: center;
+            background: white; padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border);
+            margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            flex-wrap: nowrap; /* Không cho xuống dòng */
+        }
+
+        /* FIX 3: Ngăn Tabs bị co lại (flex-shrink: 0) */
+        .tabs { display: flex; gap: 5px; flex-shrink: 0; }
+        .tab-item {
+            padding: 10px 16px; font-weight: 600; color: var(--text-sub); text-decoration: none;
+            border-radius: 8px; transition: 0.2s; display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap;
+        }
+        .tab-item:hover { background: #f1f5f9; color: var(--text-main); }
+        .tab-item.active { background: #e0e7ff; color: var(--primary); }
+
+        .divider { width: 1px; height: 24px; background: var(--border); margin: 0 5px; flex-shrink: 0; }
+
+        /* Search Form - Co giãn linh hoạt */
+        .search-form { flex-grow: 1; display: flex; align-items: center; position: relative; min-width: 200px; }
+        .search-icon { position: absolute; left: 12px; color: #94a3b8; width: 18px; pointer-events: none; }
+        .search-input {
+            width: 100%; padding: 10px 10px 10px 40px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 14px; outline: none; transition: 0.2s; background: #f8fafc;
+        }
+        .search-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px #e0e7ff; }
+
+        /* FIX 4: Ngăn Nút Thêm bị co lại */
+        .btn-add {
+            background: var(--primary); color: white; border: none; padding: 10px 20px; white-space: nowrap;
+            border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; gap: 8px; align-items: center;
+            transition: 0.2s; flex-shrink: 0;
+        }
+        .btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+        /* --- TABLE --- */
+        .table-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f8fafc; padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; color: var(--text-main); }
+        tr:hover { background: #fdfbff; }
+
+        .code-pill { font-family: 'Courier New', monospace; background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 600; border: 1px solid #e2e8f0; }
+        .id-pill { background: #eff6ff; color: #3b82f6; border-color: #dbeafe; }
+
+        /* --- MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: white; width: 550px; padding: 32px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+        
+        .form-grid { display: grid; gap: 16px; }
+        .form-label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <a href="/admin/dashboard" class="logo"><i data-lucide="command"></i> LMS ADMIN</a>
+        
+        <a href="/admin/dashboard" class="nav-link"><i data-lucide="layout-grid"></i> Tổng quan</a>
+        <a href="/admin/users" class="nav-link active"><i data-lucide="users"></i> Người dùng</a>
+        <a href="/admin/subjects" class="nav-link"><i data-lucide="book-open"></i> Môn học</a>
+        <a href="/admin/groups" class="nav-link"><i data-lucide="messages-square"></i> Nhóm học</a>
+        <a href="/admin/history" class="nav-link"><i data-lucide="history"></i> Lịch sử</a>
+        
+        <a href="/logout" class="nav-link logout-btn"><i data-lucide="log-out"></i> Đăng xuất</a>
+    </div>
+
+    <div class="main">
+        
+        <div class="header-container">
+            <div class="title-section">
+                <h1>Quản lý Người dùng</h1>
+                <p>Xem danh sách, tìm kiếm và phân quyền tài khoản hệ thống.</p>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="tabs">
+                <a href="?tab=STUDENT" th:classappend="${currentTab == 'STUDENT'} ? 'active' : ''" class="tab-item">
+                    <i data-lucide="graduation-cap" size="18"></i> Sinh viên
+                </a>
+                <a href="?tab=ADMIN" th:classappend="${currentTab == 'ADMIN'} ? 'active' : ''" class="tab-item">
+                    <i data-lucide="shield-check" size="18"></i> Admin
+                </a>
+            </div>
+
+            <div class="divider"></div>
+
+            <form action="/admin/users" method="get" class="search-form">
+                <input type="hidden" name="tab" th:value="${currentTab}">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" name="keyword" class="search-input" 
+                       placeholder="Tìm theo Tên, Email hoặc Mã SV..." 
+                       th:value="${keyword}">
+            </form>
+
+            <button onclick="openModal()" class="btn-add">
+                <i data-lucide="plus-circle" size="18"></i> Thêm Mới
+            </button>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">ID</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Mật khẩu</th>
+                        <th>Họ và Tên</th>
+                        <th>Email</th>
+                        
+                        <th th:if="${currentTab == 'STUDENT'}">Mã SV</th>
+                        <th th:if="${currentTab == 'STUDENT'}">Ngành học</th>
+                        <th th:if="${currentTab == 'ADMIN'}">Chức vụ</th>
+                        
+                        <th style="text-align: right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td style="color: #94a3b8; font-weight: bold;" th:text="${u.id}">1</td>
+                        <td style="font-weight: 600;" th:text="${u.username}">user</td>
+                        <td><span class="code-pill" th:text="${u.password}">123456</span></td>
+                        <td th:text="${u.fullName}">Name</td>
+                        <td th:text="${u.email}">mail</td>
+
+                        <td th:if="${currentTab == 'STUDENT'}">
+                            <span class="code-pill id-pill" th:text="${u.studentCode}">SV001</span>
+                        </td>
+                        <td th:if="${currentTab == 'STUDENT'}" th:text="${u.major}">IT</td>
+                        <td th:if="${currentTab == 'ADMIN'}" th:text="${u.position}">Manager</td>
+
+                        <td style="text-align: right;">
+                            <button style="border:none; background:none; cursor:pointer; color:#64748b; margin-right:8px;"
+                                th:data-id="${u.id}"
+                                th:data-username="${u.username}"
+                                th:data-password="${u.password}" 
+                                th:data-fullname="${u.fullName}"
+                                th:data-email="${u.email}"
+                                
+                                th:data-code="${currentTab == 'STUDENT' ? u.studentCode : ''}"
+                                th:data-major="${currentTab == 'STUDENT' ? u.major : ''}"
+                                th:data-year="${currentTab == 'STUDENT' ? u.year : ''}"
+                                th:data-pos="${currentTab == 'ADMIN' ? u.position : ''}"
+                                
+                                onclick="editUser(this)">
+                                <i data-lucide="edit-3" size="18"></i>
+                            </button>
+                            <a th:href="@{/admin/users/delete/{id}(id=${u.id}, tab=${currentTab})}" 
+                               onclick="return confirm('Xóa người dùng này?')" style="color:#ef4444;">
+                                <i data-lucide="trash-2" size="18"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="8" style="text-align: center; padding: 50px; color: #94a3b8;">
+                            <i data-lucide="search-x" size="32" style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></i>
+                            Không tìm thấy kết quả nào.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="modal-overlay">
+        <div class="modal">
+            <h2 id="modalTitle" style="margin-top: 0; margin-bottom: 24px;">Thêm Mới</h2>
+            
+            <form id="userForm" method="post">
+                <input type="hidden" name="id" id="inputId">
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Tên đăng nhập <span style="color:red">*</span></label>
+                        <input type="text" name="username" id="inputUser" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Họ và Tên <span style="color:red">*</span></label>
+                        <input type="text" name="fullName" id="inputName" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Email <span style="color:red">*</span></label>
+                        <input type="email" name="email" id="inputEmail" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Mật khẩu</label>
+                        <input type="text" name="password" id="inputPass" class="form-control" placeholder="Để trống nếu không đổi">
+                        <small style="color: #64748b; font-size: 12px;">Mặc định '123456' nếu để trống.</small>
+                    </div>
+
+                    <div id="studentFields" class="form-grid hidden" style="margin:0; padding:0;">
+                        <div>
+                            <label class="form-label">Mã Sinh Viên</label>
+                            <input type="text" name="studentCode" id="inputCode" class="form-control" placeholder="VD: SV2024...">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                            <div>
+                                <label class="form-label">Ngành học</label>
+                                <input type="text" name="major" id="inputMajor" class="form-control">
+                            </div>
+                            <div>
+                                <label class="form-label">Năm thứ</label>
+                                <input type="number" name="year" id="inputYear" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="adminFields" class="hidden">
+                        <div>
+                            <label class="form-label">Chức vụ</label>
+                            <input type="text" name="position" id="inputPos" class="form-control" placeholder="VD: Trưởng phòng...">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px;">
+                    <button type="button" onclick="closeModal()" style="padding: 10px 20px; background: #f1f5f9; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Hủy</button>
+                    <button type="submit" style="padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Lưu Lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        lucide.createIcons();
+        const currentTab = /*[[${currentTab}]]*/ 'STUDENT';
+        
+        const modal = document.getElementById('modal');
+        const form = document.getElementById('userForm');
+        const studentFields = document.getElementById('studentFields');
+        const adminFields = document.getElementById('adminFields');
+
+        if (currentTab === 'STUDENT') {
+            studentFields.classList.remove('hidden');
+            form.action = "/admin/users/save/student"; 
+        } else {
+            adminFields.classList.remove('hidden');
+            form.action = "/admin/users/save/admin";   
+        }
+
+        function openModal() {
+            resetForm();
+            document.getElementById('modalTitle').innerText = currentTab === 'STUDENT' ? "Thêm Sinh Viên" : "Thêm Admin";
+            modal.style.display = 'flex';
+        }
+
+        function editUser(btn) {
+            resetForm();
+            document.getElementById('modalTitle').innerText = "Cập nhật Thông tin";
+            
+            document.getElementById('inputId').value = btn.getAttribute('data-id');
+            document.getElementById('inputUser').value = btn.getAttribute('data-username');
+            document.getElementById('inputName').value = btn.getAttribute('data-fullname');
+            document.getElementById('inputEmail').value = btn.getAttribute('data-email');
+            document.getElementById('inputPass').value = btn.getAttribute('data-password');
+
+            if (currentTab === 'STUDENT') {
+                document.getElementById('inputCode').value = btn.getAttribute('data-code');
+                document.getElementById('inputMajor').value = btn.getAttribute('data-major');
+                document.getElementById('inputYear').value = btn.getAttribute('data-year');
+            } else {
+                document.getElementById('inputPos').value = btn.getAttribute('data-pos');
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() { modal.style.display = 'none'; }
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+        function resetForm() {
+            document.getElementById('inputId').value = "";
+            document.getElementById('inputUser').value = "";
+            document.getElementById('inputName').value = "";
+            document.getElementById('inputEmail').value = "";
+            document.getElementById('inputPass').value = ""; 
+            document.getElementById('inputCode').value = "";
+            document.getElementById('inputMajor').value = "";
+            document.getElementById('inputYear').value = "";
+            document.getElementById('inputPos').value = "";
+        }
+    </script>
+</body>
+</html>

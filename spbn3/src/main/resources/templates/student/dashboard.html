@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | LMS Pro</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. CORE VARIABLES (ĐỒNG BỘ VỚI TRANG KHÓA HỌC)
+           ========================================= */
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #0ea5e9;
+            --accent: #f59e0b;
+            --bg: #f8fafc;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text-main); line-height: 1.6; padding-bottom: 80px; }
+        a { text-decoration: none; transition: all 0.2s ease; }
+
+        /* =========================================
+           2. HEADER (ĐỒNG BỘ 100%)
+           ========================================= */
+        header {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0; padding: 15px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+        }
+        header .logo { font-size: 20px; font-weight: 800; color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 8px;}
+        
+        .nav-link { color: var(--text-sub); text-decoration: none; font-weight: 600; font-size: 14px; margin-left: 20px; transition: 0.3s; position: relative; }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        /* Thêm gạch chân cho link active */
+        .nav-link.active::after {
+            content: ''; position: absolute; bottom: -24px; left: 0; width: 100%; height: 2px; background: var(--primary);
+        }
+
+        .user-badge { 
+            background: white; border: 1px solid var(--border);
+            padding: 6px 16px; border-radius: 30px; 
+            font-weight: 700; font-size: 13px; color: var(--text-main);
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+
+        /* =========================================
+           3. WELCOME BANNER (STYLE RIÊNG CHO DASHBOARD)
+           ========================================= */
+        .welcome-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; padding: 50px; border-radius: 24px; margin-bottom: 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 20px 40px -10px rgba(79, 70, 229, 0.4);
+            position: relative; overflow: hidden;
+        }
+        .welcome-card::before {
+            content: ''; position: absolute; top: -50%; right: -10%; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%; pointer-events: none;
+        }
+
+        .banner-info { z-index: 2; max-width: 65%; }
+        .banner-info h2 { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+        .banner-info p { opacity: 0.95; font-size: 16px; margin-bottom: 30px; }
+        
+        /* Progress Bar Trong Banner */
+        .banner-progress-container { 
+            background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 16px; 
+            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); 
+            margin-bottom: 30px; max-width: 480px; 
+        }
+        .banner-progress-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; opacity: 0.9; }
+        .banner-progress-bg { background: rgba(255,255,255,0.2); height: 8px; border-radius: 20px; width: 100%; overflow: hidden; }
+        .banner-progress-fill { background: white; height: 100%; border-radius: 20px; transition: width 1s ease-in-out; box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+
+        /* Buttons đồng bộ style */
+        .btn-resume {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: white; color: var(--primary); padding: 12px 28px;
+            border-radius: 30px; font-weight: 700; font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s;
+        }
+        .btn-resume:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.2); }
+        
+        .btn-outline-white {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.15); color: white; padding: 12px 28px;
+            border-radius: 30px; font-weight: 700; font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.3); transition: 0.3s;
+        }
+        .btn-outline-white:hover { background: rgba(255,255,255,0.25); transform: translateY(-3px); }
+
+        /* Streak Widget */
+        .streak-box {
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+            padding: 25px 35px; border-radius: 20px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.2); z-index: 2; min-width: 150px;
+        }
+        .streak-icon { font-size: 40px; filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.6)); margin-bottom: 5px; display: block; animation: pulse 2s infinite; }
+        .streak-num { font-size: 32px; font-weight: 800; display: block; }
+        .streak-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+
+        /* =========================================
+           4. SECTIONS & CARDS (ĐỒNG BỘ STYLE CARD)
+           ========================================= */
+        .section-header { display: flex; align-items: center; margin-bottom: 25px; margin-top: 50px; gap: 10px; }
+        .section-title { font-size: 20px; font-weight: 800; margin: 0; color: var(--text-main); }
+        .view-all { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 5px; }
+        
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
+
+        /* CARD STYLE: Dùng lại style rec-card của trang khóa học */
+        .dashboard-card {
+            background: linear-gradient(135deg, #ffffff, #f8fafc);
+            border: 1px solid var(--border); border-radius: 20px; 
+            padding: 25px; position: relative; overflow: hidden; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; height: 100%;
+        }
+        .dashboard-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 15px 30px rgba(79, 70, 229, 0.15); }
+        
+        /* Badges */
+        .card-badge {
+            position: absolute; top: 15px; right: 15px; 
+            font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: 8px;
+            display: flex; align-items: center; gap: 5px; z-index: 2;
+        }
+        .badge-hot { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .badge-new { background: #e0e7ff; color: var(--primary); border: 1px solid #c7d2fe; }
+
+        /* Card Content */
+        .dc-sub { font-size: 11px; font-weight: 700; color: var(--text-sub); margin-bottom: 5px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+        .dc-title { font-size: 18px; font-weight: 800; margin-bottom: 10px; color: var(--text-main); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .dc-footer { 
+            margin-top: auto; padding-top: 15px; border-top: 1px solid #f1f5f9;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .btn-start { 
+            text-decoration: none; background: var(--primary); color: white; 
+            padding: 8px 20px; border-radius: 8px; font-weight: 600; font-size: 13px;
+            transition: 0.2s; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3); }
+
+        /* Group Card */
+        .group-card {
+            background: white; border-radius: 20px; padding: 20px; border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 18px; transition: 0.3s; color: inherit; position: relative;
+        }
+        .group-card:hover { border-color: var(--primary); box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08); transform: translateY(-5px); }
+        .gc-icon { width: 55px; height: 55px; background: #fff7ed; border-radius: 14px; color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+        .gc-info h4 { font-size: 16px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-main); }
+        .gc-meta { font-size: 12px; color: var(--text-sub); display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .tag-pill { background: #f1f5f9; padding: 3px 8px; border-radius: 6px; font-size: 11px; text-transform: uppercase; }
+
+        /* =========================================
+           5. TOAST NOTIFICATION
+           ========================================= */
+        .toast-success {
+            position: fixed; top: 90px; right: 20px; z-index: 9999;
+            background: white; border-left: 5px solid var(--success);
+            padding: 15px 25px; border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 15px;
+            animation: slideInRight 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-width: 320px;
+        }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-icon { font-size: 28px; color: var(--success); }
+        .toast-content { display: flex; flex-direction: column; }
+        .toast-title { font-weight: 800; color: var(--text-main); font-size: 15px; margin-bottom: 2px; }
+        .toast-text { font-size: 13px; color: var(--text-sub); }
+        .toast-close { background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; margin-left: auto; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 80px 40px; background: white; border: 2px dashed #e2e8f0; border-radius: 24px; margin-top: 40px; }
+        .empty-icon { font-size: 60px; margin-bottom: 20px; display: block; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/student/dashboard" class="logo">⚡ LMS Pro</a>
+        <div>
+            <a href="/student/dashboard" class="nav-link active">Dashboard</a>
+            <a href="/student/subjects" class="nav-link">Khoá học</a>
+            <a href="/student/history" class="nav-link">Lịch sử</a>
+            <a href="/logout" class="nav-link" style="color: #ef4444;">Đăng xuất</a>
+        </div>
+    </header>
+
+    <div th:if="${successMessage}" id="toast-notification" class="toast-success">
+        <i class="fas fa-check-circle toast-icon"></i>
+        <div class="toast-content">
+            <span class="toast-title">Tuyệt vời!</span>
+            <span class="toast-text" th:text="${successMessage}">Bạn đã hoàn thành bài học.</span>
+        </div>
+        <button onclick="document.getElementById('toast-notification').style.display='none'" class="toast-close">&times;</button>
+    </div>
+
+    <div class="container">
+        
+        <div class="welcome-card">
+            <div class="banner-info">
+                <h2 th:text="'Xin chào, ' + ${student.fullName} + '! 👋'">Xin chào!</h2>
+                
+                <p>
+                    <span th:if="${isNewUser}">Chào mừng tân sinh viên khoa <strong th:text="${student.major}">CNTT</strong>.</span>
+                    <span th:unless="${isNewUser}">Giữ vững phong độ nhé! Đây là tiến độ ngành <strong th:text="${student.major}"></strong>:</span>
+                </p>
+
+                <div class="banner-progress-container">
+                    <div class="banner-progress-label">
+                        <span>Tiến độ hoàn thành</span>
+                        <span th:text="${progress} + '%'">0%</span>
+                    </div>
+                    <div class="banner-progress-bg">
+                        <div class="banner-progress-fill" th:style="'width:' + ${progress} + '%'"></div>
+                    </div>
+                </div>
+
+                <a th:if="${resumeTopic != null}" th:href="@{'/student/topics/' + ${resumeTopic.id}}" class="btn-resume">
+                    <i class="fas fa-play"></i> Học tiếp: <span th:text="${resumeTopic.title}">Bài 1</span>
+                </a>
+                
+                <a th:if="${resumeTopic == null}" href="/student/subjects" class="btn-outline-white">
+                    <i class="fas fa-list"></i> Xem danh sách môn
+                </a>
+            </div>
+
+            <div class="streak-box">
+                <span class="streak-icon">🔥</span>
+                <span class="streak-num" th:text="${streak}">0</span>
+                <span class="streak-label">Ngày Streak</span>
+            </div>
+        </div>
+
+        <div id="roadmap" th:if="${majorRecommendations != null and !majorRecommendations.isEmpty()}">
+            <div class="section-header">
+                <i class="fas fa-route" style="color: var(--accent); font-size: 24px;"></i>
+                <h3 class="section-title">Lộ trình ngành <span th:text="${student.major}">CNTT</span></h3>
+            </div>
+            
+            <div class="grid-cards">
+                <div th:each="topic : ${majorRecommendations}" class="dashboard-card">
+                    <div class="card-badge badge-new">
+                        <i class="fas fa-layer-group"></i> KHỞI ĐỘNG
+                    </div>
+
+                    <div class="dc-sub">
+                        <i class="fas fa-graduation-cap"></i> <span th:text="${topic.subject.name}">JAVA CORE</span>
+                    </div>
+                    
+                    <div class="dc-title" th:text="${topic.title}">Bài 1: Giới thiệu</div>
+                    
+                    <div style="font-size: 13px; color: var(--text-sub); margin-bottom: 15px; flex-grow: 1;">
+                        <i class="fas fa-book-reader"></i> Học kỳ <span th:text="${topic.subject.semester}">1</span>
+                    </div>
+
+                    <div class="dc-footer">
+                        <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Chưa bắt đầu</span>
+                        <a th:href="@{'/student/topics/' + ${topic.id}}" class="btn-start">
+                            Học ngay <i class="fas fa-arrow-right" style="margin-left: 5px;"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${trendingTopics != null and !trendingTopics.isEmpty()}">
+            <div class="section-header">
+                <i class="fas fa-fire" style="color: var(--danger); font-size: 24px;"></i>
+                <h3 class="section-title">Đang thịnh hành</h3>
+            </div>
+            <div class="grid-cards">
+                <div th:each="topic : ${trendingTopics}" class="dashboard-card">
+                    <div class="card-badge badge-hot">
+                        <i class="fas fa-fire-alt"></i> HOT
+                    </div>
+                    
+                    <div class="dc-sub">
+                        <i class="fas fa-shapes"></i> <span th:text="${topic.subject.name}">WEB</span>
+                    </div>
+                    
+                    <div class="dc-title" th:text="${topic.title}">CSS Flexbox</div>
+
+                    <div class="dc-footer">
+                        <span style="font-size: 12px; color: var(--danger); font-weight: 600;">Xem nhiều nhất</span>
+                        <a th:href="@{'/student/topics/' + ${topic.id}}" class="btn-start" style="background: var(--danger);">
+                            Xem ngay <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${recommendedGroups != null and !recommendedGroups.isEmpty()}">
+            <div class="section-header">
+                <i class="fas fa-users" style="color: var(--primary); font-size: 24px;"></i>
+                <h3 class="section-title">Cộng đồng <span th:text="${student.major}">IT</span></h3>
+                <a href="/student/history" class="view-all">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="grid-cards">
+                <a th:each="g : ${recommendedGroups}" th:href="@{'/student/groups/' + ${g.id}}" class="group-card">
+                    <div class="gc-icon" th:text="${g.image}">🎓</div>
+                    <div class="gc-info">
+                        <h4 th:text="${g.name}">Tên nhóm</h4>
+                        <div class="gc-meta">
+                            <span class="tag-pill" th:text="${g.subjectTag}">TAG</span>
+                            <span><i class="fas fa-user-friends"></i> <span th:text="${g.members}">100</span> tv</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div th:if="${(majorRecommendations == null or majorRecommendations.isEmpty()) and 
+                    (trendingTopics == null or trendingTopics.isEmpty()) and 
+                    (recommendedGroups == null or recommendedGroups.isEmpty())}" 
+            class="empty-state">
+            <span class="empty-icon">🌟</span>
+            <h3>Chưa có dữ liệu gợi ý</h3>
+            <p style="color: #64748b;">Hệ thống cần bạn đăng ký môn học hoặc bắt đầu học để đưa ra gợi ý chính xác hơn.</p>
+            <a href="/student/subjects" class="btn-resume" style="background: var(--primary); color: white; margin-top: 20px;">Đăng ký môn học ngay</a>
+        </div>
+
+    </div>
+
+    <script>
+        setTimeout(function() {
+            var toast = document.getElementById('toast-notification');
+            if(toast) {
+                toast.style.opacity = '0';
+                setTimeout(function(){ toast.style.display = 'none'; }, 500);
+            }
+        }, 5000);
+    </script>
+
+</body>
+</html>

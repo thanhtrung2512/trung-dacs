@@ -1,0 +1,368 @@
+v<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hành trình học tập | LMS Pro</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ===== 1. CORE VARIABLES (ĐỒNG BỘ) ===== */
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #eef2ff;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --radius: 20px;
+            --shadow: 0 10px 30px -10px rgba(0,0,0,0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text-main); line-height: 1.6; }
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+
+        /* ===== 2. HEADER ===== */
+        header {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border); padding: 15px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+        }
+        header .logo { font-size: 22px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .nav-link { color: var(--text-sub); font-weight: 600; font-size: 14px; margin-left: 25px; position: relative; }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        .nav-link.active::after { content: ''; position: absolute; bottom: -20px; left: 0; width: 100%; height: 3px; background: var(--primary); border-radius: 3px 3px 0 0; }
+
+        /* ===== 3. LAYOUT GRID ===== */
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 350px; gap: 40px; }
+        @media (max-width: 992px) { .container { grid-template-columns: 1fr; } }
+
+        /* ===== 4. CONTENT AREA ===== */
+        
+        /* Stats Header */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+        .stat-card {
+            background: var(--card-bg); border-radius: var(--radius); padding: 25px;
+            border: 1px solid var(--border); display: flex; align-items: center; gap: 20px;
+            transition: 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); border-color: var(--primary); }
+        .stat-icon { width: 54px; height: 54px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+        .stat-info h3 { margin: 0; font-size: 26px; font-weight: 800; color: var(--text-main); line-height: 1; }
+        .stat-info p { margin: 5px 0 0 0; font-size: 13px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
+
+        /* Tabs & Header */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .section-title { font-size: 22px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        
+        .tabs { background: #fff; padding: 5px; border-radius: 50px; border: 1px solid var(--border); display: flex; gap: 5px; }
+        .tab-btn {
+            border: none; background: transparent; padding: 10px 25px; border-radius: 40px;
+            font-weight: 700; font-size: 14px; color: var(--text-sub); cursor: pointer; transition: 0.3s;
+        }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+
+        /* CARD: ĐANG HỌC */
+        .prog-card {
+            background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border);
+            padding: 30px; display: flex; gap: 25px; align-items: flex-start; margin-bottom: 25px;
+            transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .prog-card:hover { border-color: var(--primary); box-shadow: 0 15px 40px -10px rgba(79, 70, 229, 0.15); transform: translateY(-3px); }
+        
+        .pc-icon { width: 70px; height: 70px; background: var(--primary-light); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); flex-shrink: 0; }
+        .pc-content { flex: 1; }
+        
+        .pc-title { font-size: 18px; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 5px; }
+        .pc-meta { font-size: 13px; color: var(--text-sub); display: flex; gap: 15px; margin-bottom: 15px; }
+
+        .progress-box { margin-bottom: 20px; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px; }
+        .progress-bg { width: 100%; height: 8px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); border-radius: 10px; transition: width 0.5s ease; }
+        
+        .pc-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px dashed var(--border); }
+        
+        .last-view { font-size: 13px; color: var(--text-sub); display: flex; flex-direction: column; gap: 4px; }
+        .view-topic { font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
+        .view-time { font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 5px; }
+        
+        .btn-group { display: flex; gap: 10px; }
+        .btn-action {
+            padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .btn-primary { background: var(--primary); color: white; border: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        
+        .btn-outline { background: white; color: var(--text-main); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* CARD: ĐÃ XONG */
+        .done-item {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; transition: 0.3s;
+        }
+        .done-item:hover { border-color: var(--success); background: #f0fdf4; transform: translateX(5px); }
+        .done-left { display: flex; align-items: center; gap: 15px; }
+        .done-icon { width: 45px; height: 45px; background: #dcfce7; color: #166534; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .done-info h4 { margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main); }
+        .done-time { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+
+        /* ===== 5. AI SIDEBAR ===== */
+        .ai-sidebar { position: sticky; top: 100px; }
+        .ai-card {
+            background: linear-gradient(135deg, #ffffff, #fffbeb); border: 1px solid #fcd34d;
+            border-radius: var(--radius); padding: 30px; position: relative; overflow: hidden;
+            box-shadow: 0 10px 40px -10px rgba(245, 158, 11, 0.15);
+        }
+        .ai-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+        .group-item {
+            display: flex; align-items: center; gap: 15px; padding: 15px; border-radius: 15px;
+            background: white; border: 1px solid #fed7aa; margin-bottom: 15px; transition: 0.3s;
+        }
+        .group-item:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(245, 158, 11, 0.15); border-color: #f59e0b; }
+        
+        /* Empty State */
+        .empty-state { text-align: center; padding: 60px 20px; border: 2px dashed var(--border); border-radius: 20px; background: #fff; }
+
+        /* ===== 6. MODAL (POPUP) ===== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            z-index: 2000; opacity: 0; visibility: hidden; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal-box {
+            background: white; width: 100%; max-width: 600px; border-radius: 20px;
+            padding: 30px; position: relative; transform: translateY(20px); transition: 0.3s;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        .modal-close { position: absolute; top: 20px; right: 20px; border: none; background: none; font-size: 24px; color: var(--text-sub); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="/student/dashboard" class="logo"><i class="fas fa-bolt"></i> LMS Pro</a>
+    <div>
+        <a href="/student/dashboard" class="nav-link">Dashboard</a>
+        <a href="/student/subjects" class="nav-link">Khoá học</a>
+        <a href="/student/history" class="nav-link active">Lịch sử</a>
+        <a href="/logout" class="nav-link" style="color: #ef4444;">Đăng xuất</a>
+    </div>
+</header>
+
+<div class="container">
+
+    <main>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;"><i class="fas fa-book-reader"></i></div>
+                <div class="stat-info"><h3 th:text="${inProgressList.size()}">0</h3><p>Đang học</p></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #dcfce7; color: #166534;"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info"><h3 th:text="${completedList.size()}">0</h3><p>Đã hoàn thành</p></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #ffedd5; color: #c2410c;"><i class="fas fa-fire"></i></div>
+                <div class="stat-info"><h3>Cao</h3><p>Động lực</p></div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <div class="section-title"><i class="fas fa-layer-group" style="color: var(--primary);"></i> Tiến độ học tập</div>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('progress')">Đang học</button>
+                <button class="tab-btn" onclick="switchTab('completed')">Đã xong</button>
+            </div>
+        </div>
+
+        <div id="tab-progress">
+            <div th:if="${inProgressList.isEmpty()}" class="empty-state">
+                <i class="fas fa-mug-hot" style="font-size: 50px; color: #cbd5e1; margin-bottom: 15px;"></i>
+                <p>Bạn không có môn học nào đang dang dở.</p>
+            </div>
+
+            <div th:each="item : ${inProgressList}" class="prog-card">
+                <div class="pc-icon"><i class="fas fa-book-open"></i></div>
+                <div class="pc-content">
+                    <a th:href="@{'/student/subjects/' + ${item.subject.id}}" class="pc-title" th:text="${item.subject.name}">Tên môn</a>
+                    <div class="pc-meta">
+                        <span><i class="fas fa-code"></i> <span th:text="${item.subject.subjectCode}">CODE</span></span>
+                        <span><i class="fas fa-coins"></i> <span th:text="${item.subject.credit} + ' Tín chỉ'">3</span></span>
+                    </div>
+
+                    <div class="progress-box">
+                        <div class="progress-info"><span>Tiến độ</span><span th:text="${item.progress} + '%'">45%</span></div>
+                        <div class="progress-bg"><div class="progress-fill" th:style="'width: ' + ${item.progress} + '%'"></div></div>
+                    </div>
+
+                    <div class="pc-footer">
+                        <div class="last-view">
+                            <div class="view-topic">
+                                <i class="fas fa-history" style="color: var(--accent);"></i> 
+                                <span th:if="${item.lastTopic != null}" th:text="'Dừng lại: ' + ${item.lastTopic.title}">Bài 1</span>
+                                <span th:if="${item.lastTopic == null}">Chưa bắt đầu</span>
+                            </div>
+                            <div class="view-time" th:if="${item.lastActiveTime != null}">
+                                <i class="far fa-clock"></i> 
+                                <span th:text="${#temporals.format(item.lastActiveTime, 'HH:mm - dd/MM/yyyy')}">14:30 - 20/10/2025</span>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="button" class="btn-action btn-outline"
+                                    th:data-title="${item.subject.name}"
+                                    th:data-code="${item.subject.subjectCode}"
+                                    th:data-desc="${item.subject.description}"
+                                    th:data-credit="${item.subject.credit}"
+                                    onclick="openModal(this)">
+                                <i class="fas fa-info-circle"></i> Chi tiết
+                            </button>
+
+                            <a th:if="${item.lastTopic != null}" th:href="@{'/student/topics/' + ${item.lastTopic.id}}" class="btn-action btn-primary">
+                                Học tiếp <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <a th:if="${item.lastTopic == null}" th:href="@{'/student/subjects/' + ${item.subject.id}}" class="btn-action btn-primary">
+                                Bắt đầu
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-completed" style="display: none;">
+            <div th:if="${completedList.isEmpty()}" class="empty-state">
+                <i class="fas fa-award" style="font-size: 50px; color: #cbd5e1; margin-bottom: 15px;"></i>
+                <p>Bạn chưa hoàn thành môn học nào.</p>
+            </div>
+            <div th:each="item : ${completedList}" class="done-item">
+                <div class="done-left">
+                    <div class="done-icon"><i class="fas fa-check"></i></div>
+                    <div class="done-info">
+                        <h4 th:text="${item.subject.name}">Tên môn</h4>
+                        <div class="done-time" th:if="${item.lastActiveTime != null}">
+                            Hoàn thành: <span th:text="${#temporals.format(item.lastActiveTime, 'dd/MM/yyyy')}">20/10/2025</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-action btn-outline" 
+                            th:data-title="${item.subject.name}"
+                            th:data-code="${item.subject.subjectCode}"
+                            th:data-desc="${item.subject.description}"
+                            th:data-credit="${item.subject.credit}"
+                            onclick="openModal(this)">
+                        Chi tiết
+                    </button>
+                    <a th:href="@{'/student/subjects/' + ${item.subject.id}}" style="background: #166534; color: white; padding: 10px 15px; border-radius: 12px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 5px;">
+                        <i class="fas fa-star"></i> ĐẠT
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <aside class="ai-sidebar">
+        <div class="ai-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="font-size: 16px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-robot" style="color: var(--accent);"></i> Gợi ý nhóm
+                </div>
+                <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800;">
+                    <i class="fas fa-sparkles"></i> AI PICK
+                </div>
+            </div>
+            <p style="font-size: 13px; color: #92400e; margin-bottom: 20px; line-height: 1.5;">
+                Dựa trên <b>toàn bộ lịch sử học tập</b> của bạn, hãy tham gia các nhóm này:
+            </p>
+            <div th:if="${aiGroups.isEmpty()}" style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-sub);">
+                Chưa tìm thấy nhóm phù hợp.
+            </div>
+            <a th:each="g : ${aiGroups}" th:href="@{'/student/groups/' + ${g.id}}" class="group-item">
+                <div class="gi-icon" th:text="${g.image != null ? g.image : '🎓'}">🎓</div>
+                <div style="flex: 1;">
+                    <h4 style="margin: 0 0 3px 0; font-size: 14px; font-weight: 800; color: var(--text-main);" th:text="${g.name}">Tên nhóm</h4>
+                    <div style="font-size: 11px; color: var(--text-sub); font-weight: 600;">
+                        <span style="background: #ffedd5; color: #c2410c; padding: 2px 6px; border-radius: 4px;" th:text="${g.subjectTag}">TAG</span>
+                        <span style="margin-left: 5px;"><i class="fas fa-users"></i> <span th:text="${g.members}">10</span></span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: #fdba74;"></i>
+            </a>
+        </div>
+    </aside>
+
+</div>
+
+<div id="infoModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+            <div style="width: 60px; height: 60px; background: var(--primary-light); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--primary);">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div>
+                <div id="mCode" style="font-size: 13px; font-weight: 700; color: var(--text-sub);">CODE</div>
+                <h2 id="mTitle" style="margin: 0; font-size: 22px; font-weight: 800; color: var(--text-main);">Tên môn</h2>
+            </div>
+        </div>
+        <p id="mDesc" style="color: var(--text-sub); line-height: 1.6; margin-bottom: 25px;">Mô tả...</p>
+        <div style="background: var(--bg); padding: 15px; border-radius: 12px; display: flex; gap: 30px;">
+            <div>
+                <div style="font-size: 12px; font-weight: 600; color: var(--text-sub);">Tín chỉ</div>
+                <div id="mCredit" style="font-size: 18px; font-weight: 800; color: var(--text-main);">3</div>
+            </div>
+            <div>
+                <div style="font-size: 12px; font-weight: 600; color: var(--text-sub);">Trạng thái</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--success);">Đã đăng ký</div>
+            </div>
+        </div>
+        <button onclick="closeModal()" style="width: 100%; margin-top: 20px; background: var(--text-main); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; cursor: pointer;">Đóng</button>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabName) {
+        document.getElementById('tab-progress').style.display = (tabName === 'progress') ? 'block' : 'none';
+        document.getElementById('tab-completed').style.display = (tabName === 'completed') ? 'block' : 'none';
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(b => b.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function openModal(btn) {
+        document.getElementById('mTitle').innerText = btn.getAttribute('data-title');
+        document.getElementById('mCode').innerText = btn.getAttribute('data-code');
+        document.getElementById('mDesc').innerText = btn.getAttribute('data-desc') || "Chưa có mô tả.";
+        document.getElementById('mCredit').innerText = btn.getAttribute('data-credit');
+        document.getElementById('infoModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('infoModal').classList.remove('active');
+    }
+    
+    // Click outside to close
+    document.getElementById('infoModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+</script>
+
+</body>
+</html>

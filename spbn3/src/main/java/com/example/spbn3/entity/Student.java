@@ -39,4 +39,25 @@ public class Student extends User {
     public void setMajor(String major) { this.major = major; }
     public int getYear() { return year; }
     public void setYear(int year) { this.year = year; }
+
+    // 🔥 PHẦN QUAN TRỌNG MỚI THÊM VÀO 🔥
+    // Giúp Java so sánh sinh viên dựa trên ID thay vì địa chỉ vùng nhớ
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        
+        // Ép kiểu về Student để so sánh
+        Student student = (Student) o;
+        
+        // So sánh ID (ID được kế thừa từ class User)
+        return getId() != null && getId().equals(student.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        // Trả về hashcode của class để đảm bảo tính nhất quán trong Hibernate
+        return getClass().hashCode();
+    }
 }

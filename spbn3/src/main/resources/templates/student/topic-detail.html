@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${topic.title}">Chi tiết bài học</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+
+    <style>
+        /* ===== CẤU HÌNH MÀU SẮC ===== */
+        :root {
+            --primary: #4f46e5; --primary-dark: #4338ca;
+            --bg: #f8fafc; --text-main: #0f172a; --text-sub: #64748b;
+            --success: #10b981; --danger: #ef4444;
+            --card-bg: #ffffff; --border: #e2e8f0;
+            --sidebar-width: 350px;
+        }
+        body.dark-mode {
+            --bg: #0f172a; --text-main: #f1f5f9; --text-sub: #94a3b8;
+            --card-bg: #1e293b; --border: #334155; --primary: #6366f1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text-main); line-height: 1.6; transition: 0.3s; }
+        a { text-decoration: none; color: inherit; transition: 0.2s; }
+
+        /* HEADER */
+        header { background: var(--card-bg); padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .logo { color: var(--primary); font-size: 20px; font-weight: 800; }
+        
+        /* Nav Buttons */
+        .nav-btn { color: var(--text-sub); font-weight: 600; margin-left: 20px; font-size: 14px; }
+        .nav-btn:hover { color: var(--primary); }
+        .nav-btn.active { color: var(--primary); } /* Style cho menu đang chọn */
+
+        .btn-theme { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+
+        /* LAYOUT GRID */
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .layout-grid { display: grid; grid-template-columns: 1fr var(--sidebar-width); gap: 30px; align-items: start; transition: 0.4s ease; }
+        .layout-grid.full-width { grid-template-columns: 1fr; }
+        .layout-grid.full-width .sidebar { display: none; }
+        .layout-grid.full-width .main-content { max-width: 1000px; margin: 0 auto; width: 100%; }
+
+        /* MAIN CONTENT CARD */
+        .lesson-card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; min-height: 80vh; display: flex; flex-direction: column; }
+        .lesson-header { padding: 30px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+        .lesson-title { font-size: 26px; font-weight: 800; margin: 10px 0; line-height: 1.3; }
+        .btn-toggle-sidebar { background: var(--bg); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 8px; cursor: pointer; color: var(--text-sub); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        
+        /* TABS */
+        .lesson-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 40px; background: rgba(0,0,0,0.02); }
+        .tab-btn { padding: 15px 20px; border: none; background: transparent; cursor: pointer; font-weight: 600; color: var(--text-sub); border-bottom: 2px solid transparent; transition: 0.2s; font-size: 14px; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-content { display: none; padding: 40px; font-size: 17px; color: var(--text-main); }
+        .tab-content.active { display: block; }
+
+        /* FOOTER ACTIONS */
+        .lesson-footer { margin-top: auto; background: rgba(0,0,0,0.02); padding: 20px 40px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .btn-action { background: var(--primary); color: white; padding: 12px 25px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 15px; }
+        .btn-action:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        
+        /* SIDEBAR PLAYLIST */
+        .sidebar { position: sticky; top: 90px; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; height: calc(100vh - 120px); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); background: var(--card-bg); }
+        .topic-list { overflow-y: auto; flex: 1; }
+        .topic-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid var(--border); text-decoration: none; color: var(--text-main); transition: 0.2s; align-items: center; }
+        .topic-item:hover { background: rgba(0,0,0,0.03); }
+        .topic-item.active { background: rgba(79, 70, 229, 0.08); border-left: 4px solid var(--primary); }
+        .topic-item.active .t-title { font-weight: 700; color: var(--primary); }
+        .topic-check { width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; flex-shrink: 0; }
+        .topic-item.completed .topic-check { background: var(--success); border-color: var(--success); }
+        .topic-item.active .topic-check { border-color: var(--primary); }
+
+        /* COPY CODE BUTTON */
+        .code-container { position: relative; margin-bottom: 20px; }
+        .btn-copy { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; z-index: 10; }
+
+        /* GRADUATION CARD */
+        .course-finished-card { text-align: center; padding: 30px; background: linear-gradient(135deg, #4f46e5, #818cf8); color: white; border-radius: 16px; margin-top: 20px; box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); }
+        
+        /* PRISM Custom */
+        :not(pre) > code[class*="language-"], pre[class*="language-"] { border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; background: #1e293b; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="display: flex; align-items: center;">
+        <a href="/student/dashboard" class="logo">⚡ LMS Pro</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+        <button onclick="toggleTheme()" class="btn-theme" title="Chế độ tối/sáng"><i class="fas fa-moon"></i></button>
+        
+        <a href="/student/dashboard" class="nav-btn">Dashboard</a>
+        <a href="/student/subjects" class="nav-btn">Khoá học</a>
+        
+        <a href="/student/history" class="nav-btn">Lịch sử</a>
+        
+        <a href="/logout" class="nav-btn" style="color: var(--danger);">Đăng xuất</a>
+    </div>
+</header>
+
+<div class="container layout-grid" id="layoutGrid">
+
+    <div class="main-content">
+        <div class="lesson-card">
+            <div class="lesson-header">
+                <div>
+                    <span style="background: rgba(0,0,0,0.05); color: var(--text-sub); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Bài học</span>
+                    <h1 class="lesson-title" th:text="${topic.title}">Tiêu đề bài học</h1>
+                    <div style="font-size: 13px; color: var(--text-sub);">
+                        <i class="fas fa-book"></i> Môn học: <strong th:text="${subject.name}"></strong> &bull; 
+                        <i class="far fa-clock"></i> <span th:text="${readingTime} + ' phút đọc'"></span>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="btn-toggle-sidebar" title="Mở rộng"><i class="fas fa-expand-alt"></i></button>
+            </div>
+
+            <div class="lesson-tabs">
+                <button class="tab-btn active" onclick="switchTab(this, 'content')"><i class="fas fa-file-alt"></i> Bài học</button>
+                <button class="tab-btn" onclick="switchTab(this, 'qa')"><i class="fas fa-comments"></i> Hỏi đáp</button>
+                <button class="tab-btn" onclick="switchTab(this, 'resources')"><i class="fas fa-paperclip"></i> Tài liệu</button>
+            </div>
+
+            <div id="content" class="tab-content active">
+                <div class="lesson-body" th:utext="${topic.content}">Nội dung đang cập nhật...</div>
+            </div>
+            <div id="qa" class="tab-content">
+                <div style="text-align: center; color: var(--text-sub); padding: 40px;">
+                    <p>Chưa có câu hỏi nào.</p>
+                </div>
+            </div>
+            <div id="resources" class="tab-content">
+                <div style="padding: 15px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 24px;"></i>
+                    <div>
+                        <div style="font-weight: 700;">Tài liệu bài học.pdf</div>
+                        <div style="font-size: 12px; color: var(--text-sub);">2.5 MB</div>
+                    </div>
+                    <button style="margin-left: auto; color: var(--primary); background: none; border: none; font-weight: 700; cursor: pointer;">Tải xuống</button>
+                </div>
+            </div>
+
+            <div class="lesson-footer">
+                <a th:href="@{'/student/subjects/' + ${subject.id}}" style="color: var(--text-sub); font-weight: 600; font-size: 14px;">
+                    <i class="fas fa-arrow-left"></i> Về môn học
+                </a>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <form th:if="${!isCompleted}" th:action="@{'/student/topics/' + ${topic.id} + '/complete'}" method="post">
+                        <button type="submit" class="btn-action">Đánh dấu hoàn thành <i class="fas fa-check"></i></button>
+                    </form>
+                    <div th:if="${isCompleted}" style="display: flex; gap: 15px; align-items: center;">
+                        <span style="color: var(--success); font-weight: 700; font-size: 14px;"><i class="fas fa-check-circle"></i> Đã xong</span>
+                        <a th:if="${nextTopic != null}" th:href="@{'/student/topics/' + ${nextTopic.id}}" class="btn-action">Bài tiếp theo <i class="fas fa-arrow-right"></i></a>
+                        <div th:if="${nextTopic == null}" style="background: var(--success); color: white; padding: 8px 15px; border-radius: 8px; font-weight: 700; font-size: 13px;">HẾT MÔN</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${isCompleted and nextTopic == null}" class="course-finished-card">
+            <div style="font-size: 40px; margin-bottom: 10px;">🎓</div>
+            <h2 style="margin: 0;">CHÚC MỪNG BẠN!</h2>
+            <p style="margin: 10px 0; opacity: 0.9;">Bạn đã xuất sắc hoàn thành môn học <strong th:text="${subject.name}"></strong>.</p>
+            <a href="/student/subjects" style="background: white; color: var(--primary); padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; display: inline-block; margin-top: 10px;">Quay về danh sách môn</a>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div style="font-weight: 700; margin-bottom: 5px;">Nội dung khóa học</div>
+            <div style="font-size: 12px; color: var(--text-sub); display: flex; justify-content: space-between;">
+                <span th:text="${progress} + '% hoàn thành'"></span>
+                <span th:if="${playlist != null}" th:text="${completedIds.size()} + '/' + ${playlist.size()}"></span>
+            </div>
+            <div style="height: 4px; background: rgba(0,0,0,0.05); margin-top: 8px; border-radius: 2px; overflow: hidden;">
+                <div style="height: 100%; background: var(--success);" th:style="'width: ' + ${progress} + '%'"></div>
+            </div>
+        </div>
+
+        <div class="topic-list">
+            <a th:each="t : ${playlist}" 
+               th:href="@{'/student/topics/' + ${t.id}}" 
+               class="topic-item"
+               th:classappend="${t.id == topic.id} ? 'active' : (${completedIds.contains(t.id)} ? 'completed' : '')">
+                
+                <div class="topic-check">
+                    <i class="fas fa-check" th:if="${completedIds.contains(t.id)}"></i>
+                    <i class="fas fa-play" th:if="${!completedIds.contains(t.id) and t.id == topic.id}" style="font-size: 8px; color: var(--primary);"></i>
+                </div>
+                
+                <div style="flex: 1;">
+                    <div class="t-title" th:text="${t.title}" style="font-size: 14px; line-height: 1.4;">Tên bài</div>
+                    <div th:if="${t.id == topic.id}" style="font-size: 11px; color: var(--primary); margin-top: 2px;">Đang xem</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        const isCompleted = [[${isCompleted}]];
+        const isFinishedCourse = [[${nextTopic == null}]];
+        
+        if (isCompleted && isFinishedCourse) {
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        }
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.btn-theme i').classList.replace('fa-moon', 'fa-sun');
+        }
+
+        document.querySelectorAll('pre').forEach(pre => {
+            let wrapper = document.createElement('div');
+            wrapper.className = 'code-container';
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+
+            let btn = document.createElement('button');
+            btn.className = 'btn-copy';
+            btn.innerHTML = '<i class="far fa-copy"></i> Copy';
+            
+            btn.addEventListener('click', () => {
+                navigator.clipboard.writeText(pre.innerText).then(() => {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => btn.innerHTML = '<i class="far fa-copy"></i> Copy', 2000);
+                });
+            });
+            wrapper.appendChild(btn);
+        });
+    });
+
+    function toggleSidebar() { document.getElementById('layoutGrid').classList.toggle('full-width'); }
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const icon = document.querySelector('.btn-theme i');
+        if (document.body.classList.contains('dark-mode')) {
+            icon.classList.replace('fa-moon', 'fa-sun');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            icon.classList.replace('fa-sun', 'fa-moon');
+            localStorage.setItem('theme', 'light');
+        }
+    }
+    function switchTab(btn, tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+</script>
+
+</body>
+</html>

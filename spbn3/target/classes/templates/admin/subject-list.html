@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Môn học | LMS Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* --- COPY STYLE ĐỒNG BỘ TỪ USER-LIST --- */
+        :root {
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --primary: #4f46e5; /* Indigo */
+            --primary-hover: #4338ca;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --sidebar-width: 260px;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; 
+            display: block; 
+        }
+
+        /* SIDEBAR (FIXED) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--surface);
+            height: 100vh;
+            position: fixed; top: 0; left: 0;
+            border-right: 1px solid var(--border);
+            padding: 32px 24px;
+            z-index: 100;
+            display: flex; flex-direction: column;
+            box-sizing: border-box;
+        }
+        
+        .logo { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; gap: 10px; margin-bottom: 40px; text-decoration: none; align-items: center; }
+        .nav-link { display: flex; gap: 12px; padding: 12px; color: var(--text-sub); text-decoration: none; font-weight: 500; border-radius: 8px; margin-bottom: 4px; transition: 0.2s; align-items: center; }
+        .nav-link:hover, .nav-link.active { background: #e0e7ff; color: var(--primary); }
+        .logout-btn { margin-top: auto; color: #ef4444; }
+        .logout-btn:hover { background: #fee2e2; color: #b91c1c; }
+
+        /* MAIN CONTENT */
+        .main {
+            margin-left: var(--sidebar-width);
+            width: auto;
+            padding: 40px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .header-container { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .title-section h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+        .title-section p { color: var(--text-sub); font-size: 14px; margin-top: 5px; }
+
+        /* TOOLBAR */
+        .toolbar {
+            display: flex; gap: 15px; align-items: center;
+            background: white; padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border);
+            margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            flex-wrap: nowrap;
+        }
+
+        .search-form { flex-grow: 1; display: flex; align-items: center; position: relative; min-width: 200px; }
+        .search-icon { position: absolute; left: 12px; color: #94a3b8; width: 18px; pointer-events: none; }
+        .search-input {
+            width: 100%; padding: 10px 10px 10px 40px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 14px; outline: none; transition: 0.2s; background: #f8fafc;
+        }
+        .search-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px #e0e7ff; }
+
+        .btn-add {
+            background: var(--primary); color: white; border: none; padding: 10px 20px; white-space: nowrap;
+            border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; gap: 8px; align-items: center;
+            transition: 0.2s; flex-shrink: 0;
+        }
+        .btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+        /* TABLE */
+        .table-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { background: #f8fafc; padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; color: var(--text-main); }
+        tr:hover { background: #fdfbff; }
+
+        /* Badges */
+        .code-pill { font-family: 'Courier New', monospace; background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 600; border: 1px solid #e2e8f0; }
+        .credit-badge { background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #d1fae5; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: white; width: 500px; padding: 32px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        
+        .form-grid { display: grid; gap: 16px; }
+        .form-label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px #e0e7ff; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <a href="/admin/dashboard" class="logo"><i data-lucide="command"></i> LMS ADMIN</a>
+        
+        <a href="/admin/dashboard" class="nav-link"><i data-lucide="layout-grid"></i> Tổng quan</a>
+        <a href="/admin/users" class="nav-link"><i data-lucide="users"></i> Người dùng</a>
+        <a href="/admin/subjects" class="nav-link active"><i data-lucide="book-open"></i> Môn học</a>
+        <a href="/admin/groups" class="nav-link"><i data-lucide="messages-square"></i> Nhóm học</a>
+        <a href="/admin/history" class="nav-link"><i data-lucide="history"></i> Lịch sử</a>
+        
+        <a href="/logout" class="nav-link logout-btn"><i data-lucide="log-out"></i> Đăng xuất</a>
+    </div>
+
+    <div class="main">
+        
+        <div class="header-container">
+            <div class="title-section">
+                <h1>Quản lý Môn học</h1>
+                <p>Danh sách các môn học và tín chỉ trong hệ thống.</p>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <form action="/admin/subjects" method="get" class="search-form">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" name="keyword" class="search-input" 
+                       placeholder="Tìm theo Mã môn hoặc Tên môn..." 
+                       th:value="${keyword}">
+            </form>
+
+            <button onclick="openModal()" class="btn-add">
+                <i data-lucide="plus-circle" size="18"></i> Thêm Môn Học
+            </button>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>Mã Môn học</th>
+                        <th>Tên Môn học</th>
+                        <th>Số Tín chỉ</th>
+                        <th style="text-align: right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="sub : ${subjects}">
+                        <td style="color: #94a3b8; font-weight: bold;" th:text="${sub.id}">1</td>
+                        
+                        <td><span class="code-pill" th:text="${sub.subjectCode}">IT101</span></td>
+                        
+                        <td style="font-weight: 600;" th:text="${sub.name}">Lập trình Java</td>
+                        
+                        <td>
+                            <span class="credit-badge" th:text="${sub.credit} + ' TC'">3 TC</span>
+                        </td>
+
+                        <td style="text-align: right;">
+                            <button style="border:none; background:none; cursor:pointer; color:#64748b; margin-right:8px;"
+                                th:data-id="${sub.id}"
+                                th:data-code="${sub.subjectCode}"
+                                th:data-name="${sub.name}"
+                                th:data-credit="${sub.credit}"
+                                onclick="editSubject(this)">
+                                <i data-lucide="edit-3" size="18"></i>
+                            </button>
+                            <a th:href="@{/admin/subjects/delete/{id}(id=${sub.id})}" 
+                               onclick="return confirm('Bạn có chắc muốn xóa môn học này?')" 
+                               style="color:#ef4444;">
+                                <i data-lucide="trash-2" size="18"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(subjects)}">
+                        <td colspan="5" style="text-align: center; padding: 50px; color: #94a3b8;">
+                            <i data-lucide="book-x" size="32" style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></i>
+                            Chưa có môn học nào hoặc không tìm thấy kết quả.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="modal-overlay">
+        <div class="modal">
+            <h2 id="modalTitle" style="margin-top: 0; margin-bottom: 24px;">Thêm Môn Học</h2>
+            
+            <form action="/admin/subjects/save" method="post" id="subjectForm">
+                <input type="hidden" name="id" id="inputId">
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Mã Môn học <span style="color:red">*</span></label>
+                        <input type="text" name="subjectCode" id="inputCode" class="form-control" placeholder="VD: IT3010" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Tên Môn học <span style="color:red">*</span></label>
+                        <input type="text" name="name" id="inputName" class="form-control" placeholder="VD: Lập trình Web" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Số Tín chỉ <span style="color:red">*</span></label>
+                        <input type="number" name="credit" id="inputCredit" class="form-control" min="1" max="10" required>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px;">
+                    <button type="button" onclick="closeModal()" style="padding: 10px 20px; background: #f1f5f9; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: #475569;">Hủy</button>
+                    <button type="submit" style="padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Lưu Lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        const modal = document.getElementById('modal');
+        const form = document.getElementById('subjectForm');
+
+        function openModal() {
+            resetForm();
+            document.getElementById('modalTitle').innerText = "Thêm Môn Học Mới";
+            modal.style.display = 'flex';
+        }
+
+        function editSubject(btn) {
+            resetForm();
+            document.getElementById('modalTitle').innerText = "Cập nhật Môn Học";
+            
+            // Lấy dữ liệu từ button
+            document.getElementById('inputId').value = btn.getAttribute('data-id');
+            document.getElementById('inputCode').value = btn.getAttribute('data-code');
+            document.getElementById('inputName').value = btn.getAttribute('data-name');
+            document.getElementById('inputCredit').value = btn.getAttribute('data-credit');
+
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // Đóng modal khi click ra ngoài
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+
+        function resetForm() {
+            document.getElementById('inputId').value = "";
+            document.getElementById('inputCode').value = "";
+            document.getElementById('inputName').value = "";
+            document.getElementById('inputCredit').value = "";
+        }
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@ package com.example.spbn3.service;
 
 import com.example.spbn3.entity.Topic;
 import com.example.spbn3.repository.TopicRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,21 +10,42 @@ import java.util.List;
 @Service
 public class TopicService {
 
-    private final TopicRepository topicRepository;
+    @Autowired
+    private TopicRepository topicRepository;
 
-    public TopicService(TopicRepository topicRepository) {
-        this.topicRepository = topicRepository;
+    // 1. Lấy tất cả topic
+    public List<Topic> getAllTopics() {
+        return topicRepository.findAll();
     }
 
-    public List<Topic> getTopicsBySubject(Long subjectId) {
+    // 2. Lấy topic theo ID
+    public Topic getTopicById(Long id) {
+        return topicRepository.findById(id).orElse(null);
+    }
+
+    // 3. Lấy danh sách topic theo môn học
+    public List<Topic> getTopicsBySubjectId(Long subjectId) {
         return topicRepository.findBySubjectId(subjectId);
     }
 
-    public List<Topic> searchTopic(String keyword) {
+    // 4. Tìm kiếm topic (Toàn bộ)
+    public List<Topic> searchTopics(String keyword) {
         return topicRepository.findByTitleContainingIgnoreCase(keyword);
     }
 
-    public void addTopic(Topic topic) {
-        topicRepository.save(topic);
+    // =======================================================
+    // 🔥 HÀM SỬA LỖI: TÌM KIẾM TRONG MÔN HỌC (Đang bị thiếu)
+    // =======================================================
+    public List<Topic> searchTopicsInSubject(Long subjectId, String keyword) {
+        // Gọi hàm repository tương ứng
+        return topicRepository.findBySubjectIdAndTitleContainingIgnoreCase(subjectId, keyword);
+    }
+    
+    // =======================================================
+    // 5. LẤY BÀI TIẾP THEO (Logic fallback)
+    // =======================================================
+    public Topic getNextTopic(Long subjectId, Long currentTopicId) {
+        // Gọi hàm findFirst... mới cập nhật trong Repository
+        return topicRepository.findFirstBySubjectIdAndIdGreaterThanOrderByIdAsc(subjectId, currentTopicId);
     }
 }

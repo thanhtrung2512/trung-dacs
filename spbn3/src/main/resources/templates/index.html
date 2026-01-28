@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập hệ thống học tập</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(120deg, #2980b9, #6dd5fa);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            background: #fff;
+            padding: 40px;
+            width: 380px;
+            border-radius: 10px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 24px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 15px;
+            display: block;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        button {
+            background: #2980b9;
+            color: white;
+            border: none;
+            margin-top: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #1f6391;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+
+        .register {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .register a {
+            text-decoration: none;
+            color: #2980b9;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h2>Đăng nhập hệ thống</h2>
+
+    <label>Username hoặc Email</label>
+    <input type="text" id="username" placeholder="sv001 / admin1 / a@gmail.com">
+
+    <label>Mật khẩu</label>
+    <input type="password" id="password" placeholder="Nhập mật khẩu">
+
+    <label>Vai trò</label>
+    <select id="role">
+        <option value="">-- Chọn vai trò --</option>
+        <option value="STUDENT">Sinh viên</option>
+        <option value="ADMIN">Admin</option>
+    </select>
+
+    <button type="button" onclick="login()">Đăng nhập</button>
+
+    <div class="error" id="errorMsg"></div>
+
+    <div class="register">
+        Chưa có tài khoản?
+        <a th:href="@{/register}">Đăng ký sinh viên</a>
+    </div>
+</div>
+
+<script>
+function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const role = document.getElementById("role").value;
+    const errorMsg = document.getElementById("errorMsg");
+
+    errorMsg.innerText = "";
+
+    if (!username || !password || !role) {
+        errorMsg.innerText = "Vui lòng nhập đầy đủ thông tin";
+        return;
+    }
+
+    const params = new URLSearchParams();
+    params.append("username", username);
+    params.append("password", password);
+    params.append("role", role);
+
+    fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString()
+    })
+    .then(res => {
+        if (!res.ok) return res.text().then(msg => { throw new Error(msg); });
+        return res.json();
+    })
+    .then(user => {
+        sessionStorage.setItem("userId", user.id);
+        sessionStorage.setItem("username", user.username);
+        sessionStorage.setItem("role", user.role);
+
+        if (user.role === "STUDENT") window.location.href = "/student/dashboard";
+        else if (user.role === "ADMIN") window.location.href = "/admin/dashboard";
+    })
+    .catch(err => errorMsg.innerText = err.message);
+}
+</script>
+
+</body>
+</html>
