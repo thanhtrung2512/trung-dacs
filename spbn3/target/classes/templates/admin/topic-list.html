@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Bài giảng | LMS Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* --- STYLE CHUẨN ĐỒNG BỘ (ĐÃ FIX LỖI LAYOUT) --- */
+        :root {
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --sidebar-width: 260px;
+        }
+
+        /* 1. Body display block để tránh lỗi flex layout */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; 
+            display: block; 
+        }
+
+        /* 2. Sidebar Cố định (Fixed) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--surface);
+            height: 100vh;
+            position: fixed; top: 0; left: 0;
+            border-right: 1px solid var(--border);
+            padding: 32px 24px;
+            z-index: 100;
+            display: flex; flex-direction: column;
+            box-sizing: border-box;
+        }
+        
+        .logo { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; gap: 10px; margin-bottom: 40px; text-decoration: none; align-items: center; }
+        .nav-link { display: flex; gap: 12px; padding: 12px; color: var(--text-sub); text-decoration: none; font-weight: 500; border-radius: 8px; margin-bottom: 4px; transition: 0.2s; align-items: center; }
+        .nav-link:hover, .nav-link.active { background: #e0e7ff; color: var(--primary); }
+        .logout-btn { margin-top: auto; color: #ef4444; }
+
+        /* 3. Main Content (Quan trọng: margin-left để đẩy nội dung ra) */
+        .main {
+            margin-left: var(--sidebar-width);
+            width: auto;
+            padding: 40px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* --- CÁC THÀNH PHẦN KHÁC --- */
+        
+        /* Nút Back */
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--text-sub); text-decoration: none; font-weight: 600;
+            font-size: 14px; margin-bottom: 20px; transition: 0.2s;
+            background: white; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+        }
+        .btn-back:hover { color: var(--primary); border-color: var(--primary); background: #e0e7ff; }
+
+        /* Header & Toolbar */
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .title-section h1 { font-size: 28px; font-weight: 700; margin: 0; }
+        .title-section p { color: var(--text-sub); margin-top: 5px; font-size: 14px; }
+        
+        .btn-add {
+            background: var(--primary); color: white; border: none; padding: 10px 20px;
+            border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; gap: 8px; align-items: center;
+        }
+        .btn-add:hover { background: var(--primary-hover); }
+
+        /* Table */
+        .table-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { background: #f8fafc; padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-sub); border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; color: var(--text-main); }
+        tr:hover { background: #fdfbff; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: white; width: 700px; padding: 32px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+        
+        .form-label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box; font-family: inherit; }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px #e0e7ff; }
+        textarea.form-control { min-height: 200px; resize: vertical; line-height: 1.6; }
+        
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <a href="/admin/dashboard" class="logo"><i data-lucide="command"></i> LMS ADMIN</a>
+        
+        <a href="/admin/dashboard" class="nav-link"><i data-lucide="layout-grid"></i> Tổng quan</a>
+        <a href="/admin/users" class="nav-link"><i data-lucide="users"></i> Người dùng</a>
+        <a href="/admin/subjects" class="nav-link active"><i data-lucide="book-open"></i> Môn học</a>
+        <a href="/admin/groups" class="nav-link"><i data-lucide="messages-square"></i> Nhóm học</a>
+        <a href="/admin/history" class="nav-link"><i data-lucide="history"></i> Lịch sử</a>
+        
+        <a href="/logout" class="nav-link logout-btn"><i data-lucide="log-out"></i> Đăng xuất</a>
+    </div>
+
+    <div class="main">
+        
+        <a href="/admin/subjects" class="btn-back">
+            <i data-lucide="arrow-left" size="16"></i> Quay lại Danh sách Môn
+        </a>
+
+        <div class="header-flex">
+            <div class="title-section">
+                <h1 style="font-size: 28px; font-weight: 700; margin: 0;">
+                    Bài giảng: <span th:text="${currentSubject.name}" style="color: var(--primary);">Tên Môn</span>
+                </h1>
+                <p>Quản lý nội dung chi tiết các chương và bài học.</p>
+            </div>
+            <button onclick="openModal()" class="btn-add">
+                <i data-lucide="plus-circle" size="18"></i> Thêm Bài Mới
+            </button>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">ID</th>
+                        <th style="width: 30%;">Tiêu đề bài học</th>
+                        <th>Nội dung (Trích dẫn)</th>
+                        <th style="text-align: right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="t : ${topics}">
+                        <td style="color: #94a3b8; font-weight: bold;" th:text="${t.id}">1</td>
+                        <td style="font-weight: 600;" th:text="${t.title}">Bài 1: Intro</td>
+                        
+                        <td style="color: #64748b; font-size: 13px;">
+                            <span th:text="${#strings.abbreviate(t.content, 100)}">Nội dung...</span>
+                        </td>
+
+                        <td style="text-align: right;">
+                            <button style="border:none; background:none; cursor:pointer; color:#64748b; margin-right:8px;"
+                                th:data-id="${t.id}"
+                                th:data-title="${t.title}"
+                                th:data-content="${t.content}"
+                                onclick="editTopic(this)">
+                                <i data-lucide="edit-3" size="18"></i>
+                            </button>
+                            <a th:href="@{/admin/topics/delete/{id}(id=${t.id}, subjectId=${currentSubject.id})}" 
+                               onclick="return confirm('Bạn có chắc muốn xóa bài này?')" 
+                               style="color:#ef4444;">
+                                <i data-lucide="trash-2" size="18"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr th:if="${#lists.isEmpty(topics)}">
+                        <td colspan="4" style="text-align: center; padding: 50px; color: #94a3b8;">
+                            <i data-lucide="file-minus" size="32" style="margin-bottom: 10px; display: block; margin: 0 auto 10px auto;"></i>
+                            Chưa có bài giảng nào. Hãy thêm bài đầu tiên!
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="modal-overlay">
+        <div class="modal">
+            <h2 id="modalTitle" style="margin-top: 0; margin-bottom: 24px;">Thêm Bài Học</h2>
+            
+            <form action="/admin/topics/save" method="post" id="topicForm">
+                <input type="hidden" name="id" id="inputId">
+                
+                <input type="hidden" name="subjectId" th:value="${currentSubject.id}">
+
+                <div>
+                    <label class="form-label">Tiêu đề bài học <span style="color:red">*</span></label>
+                    <input type="text" name="title" id="inputTitle" class="form-control" required placeholder="VD: Chương 1: Giới thiệu...">
+                </div>
+
+                <div>
+                    <label class="form-label">Nội dung chi tiết <span style="color:red">*</span></label>
+                    <textarea name="content" id="inputContent" class="form-control" required placeholder="Nhập nội dung bài giảng, HTML, hoặc mã nhúng Video..."></textarea>
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: -15px; margin-bottom: 20px;">* Hỗ trợ nhập mã HTML (img, iframe, p, b...).</p>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" onclick="closeModal()" style="padding: 10px 20px; background: #f1f5f9; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: #475569;">Hủy</button>
+                    <button type="submit" style="padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Lưu Lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const modal = document.getElementById('modal');
+
+        function openModal() {
+            resetForm();
+            document.getElementById('modalTitle').innerText = "Thêm Bài Học Mới";
+            modal.style.display = 'flex';
+        }
+
+        function editTopic(btn) {
+            resetForm();
+            document.getElementById('modalTitle').innerText = "Cập nhật Bài Học";
+            
+            document.getElementById('inputId').value = btn.getAttribute('data-id');
+            document.getElementById('inputTitle').value = btn.getAttribute('data-title');
+            document.getElementById('inputContent').value = btn.getAttribute('data-content');
+
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        function resetForm() {
+            document.getElementById('inputId').value = "";
+            document.getElementById('inputTitle').value = "";
+            document.getElementById('inputContent').value = "";
+        }
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+    </script>
+</body>
+</html>

@@ -7,11 +7,11 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        /* --- COPY STYLE ĐỒNG BỘ TỪ USER-LIST --- */
+        /* --- COPY STYLE CHUẨN TỪ USER-LIST --- */
         :root {
             --bg-body: #f8fafc;
             --surface: #ffffff;
-            --primary: #4f46e5; /* Indigo */
+            --primary: #4f46e5;
             --primary-hover: #4338ca;
             --text-main: #0f172a;
             --text-sub: #64748b;
@@ -19,6 +19,7 @@
             --sidebar-width: 260px;
         }
 
+        /* FIX 1: Body display block */
         body { 
             font-family: 'Inter', sans-serif; 
             background: var(--bg-body); 
@@ -27,7 +28,7 @@
             display: block; 
         }
 
-        /* SIDEBAR (FIXED) */
+        /* --- SIDEBAR (FIXED) --- */
         .sidebar {
             width: var(--sidebar-width);
             background: var(--surface);
@@ -46,7 +47,8 @@
         .logout-btn { margin-top: auto; color: #ef4444; }
         .logout-btn:hover { background: #fee2e2; color: #b91c1c; }
 
-        /* MAIN CONTENT */
+        /* --- MAIN CONTENT --- */
+        /* FIX 2: margin-left đẩy nội dung ra */
         .main {
             margin-left: var(--sidebar-width);
             width: auto;
@@ -60,7 +62,7 @@
         .title-section h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
         .title-section p { color: var(--text-sub); font-size: 14px; margin-top: 5px; }
 
-        /* TOOLBAR */
+        /* --- TOOLBAR --- */
         .toolbar {
             display: flex; gap: 15px; align-items: center;
             background: white; padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border);
@@ -83,25 +85,30 @@
         }
         .btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); }
 
-        /* TABLE */
+        /* --- TABLE --- */
         .table-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { background: #f8fafc; padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; }
         td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; color: var(--text-main); }
         tr:hover { background: #fdfbff; }
 
-        /* Badges */
         .code-pill { font-family: 'Courier New', monospace; background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 600; border: 1px solid #e2e8f0; }
         .credit-badge { background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #d1fae5; }
+        
+        /* Style cho link tên môn học */
+        .subject-link { text-decoration: none; color: var(--text-main); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .subject-link:hover { color: var(--primary); transform: translateX(5px); }
+        .subject-link i { opacity: 0; transition: 0.2s; color: var(--primary); }
+        .subject-link:hover i { opacity: 1; }
 
-        /* MODAL */
+        /* --- MODAL --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal { background: white; width: 500px; padding: 32px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal { background: white; width: 550px; padding: 32px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
         
         .form-grid { display: grid; gap: 16px; }
         .form-label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
         .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
-        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px #e0e7ff; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -111,8 +118,7 @@
         
         <a href="/admin/dashboard" class="nav-link"><i data-lucide="layout-grid"></i> Tổng quan</a>
         <a href="/admin/users" class="nav-link"><i data-lucide="users"></i> Người dùng</a>
-        <a href="/admin/subjects" class="nav-link active"><i data-lucide="book-open"></i> Môn học</a>
-        <a href="/admin/groups" class="nav-link"><i data-lucide="messages-square"></i> Nhóm học</a>
+        <a href="/admin/subjects" class="nav-link active"><i data-lucide="book-open"></i> Môn học</a> <a href="/admin/groups" class="nav-link"><i data-lucide="messages-square"></i> Nhóm học</a>
         <a href="/admin/history" class="nav-link"><i data-lucide="history"></i> Lịch sử</a>
         
         <a href="/logout" class="nav-link logout-btn"><i data-lucide="log-out"></i> Đăng xuất</a>
@@ -123,7 +129,7 @@
         <div class="header-container">
             <div class="title-section">
                 <h1>Quản lý Môn học</h1>
-                <p>Danh sách các môn học và tín chỉ trong hệ thống.</p>
+                <p>Danh sách các môn học và cấu hình lộ trình đào tạo.</p>
             </div>
         </div>
 
@@ -131,7 +137,7 @@
             <form action="/admin/subjects" method="get" class="search-form">
                 <i data-lucide="search" class="search-icon"></i>
                 <input type="text" name="keyword" class="search-input" 
-                       placeholder="Tìm theo Mã môn hoặc Tên môn..." 
+                       placeholder="Tìm kiếm môn học..." 
                        th:value="${keyword}">
             </form>
 
@@ -144,46 +150,58 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 60px;">ID</th>
-                        <th>Mã Môn học</th>
-                        <th>Tên Môn học</th>
-                        <th>Số Tín chỉ</th>
+                        <th style="width: 50px;">ID</th>
+                        <th>Mã Môn</th>
+                        <th>Tên Môn học (Click xem bài)</th>
+                        <th>Ngành</th>
+                        <th>Học kỳ</th>
+                        <th>Tín chỉ</th>
                         <th style="text-align: right;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="sub : ${subjects}">
                         <td style="color: #94a3b8; font-weight: bold;" th:text="${sub.id}">1</td>
-                        
                         <td><span class="code-pill" th:text="${sub.subjectCode}">IT101</span></td>
                         
-                        <td style="font-weight: 600;" th:text="${sub.name}">Lập trình Java</td>
-                        
                         <td>
-                            <span class="credit-badge" th:text="${sub.credit} + ' TC'">3 TC</span>
+                            <a th:href="@{/admin/topics(subjectId=${sub.id})}" class="subject-link" title="Quản lý bài giảng">
+                                <span th:text="${sub.name}">Lập trình Java</span>
+                                <i data-lucide="arrow-right" size="14"></i>
+                            </a>
                         </td>
+
+                        <td th:text="${sub.targetMajor}">CNTT</td>
+                        <td>
+                            <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;" 
+                                  th:text="'HK ' + ${sub.semester}">HK 1</span>
+                        </td>
+                        <td><span class="credit-badge" th:text="${sub.credit} + ' TC'">3 TC</span></td>
 
                         <td style="text-align: right;">
                             <button style="border:none; background:none; cursor:pointer; color:#64748b; margin-right:8px;"
                                 th:data-id="${sub.id}"
                                 th:data-code="${sub.subjectCode}"
                                 th:data-name="${sub.name}"
+                                th:data-major="${sub.targetMajor}"
+                                th:data-semester="${sub.semester}"
                                 th:data-credit="${sub.credit}"
+                                th:data-desc="${sub.description}"
                                 onclick="editSubject(this)">
                                 <i data-lucide="edit-3" size="18"></i>
                             </button>
                             <a th:href="@{/admin/subjects/delete/{id}(id=${sub.id})}" 
-                               onclick="return confirm('Bạn có chắc muốn xóa môn học này?')" 
+                               onclick="return confirm('Bạn có chắc muốn xóa môn học này? Toàn bộ bài học bên trong cũng sẽ bị xóa!')" 
                                style="color:#ef4444;">
                                 <i data-lucide="trash-2" size="18"></i>
                             </a>
                         </td>
                     </tr>
-
+                    
                     <tr th:if="${#lists.isEmpty(subjects)}">
-                        <td colspan="5" style="text-align: center; padding: 50px; color: #94a3b8;">
-                            <i data-lucide="book-x" size="32" style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></i>
-                            Chưa có môn học nào hoặc không tìm thấy kết quả.
+                        <td colspan="7" style="text-align: center; padding: 50px; color: #94a3b8;">
+                            <i data-lucide="book-x" size="32" style="margin-bottom: 10px; display: block; margin: 0 auto 10px auto;"></i>
+                            Chưa có dữ liệu môn học.
                         </td>
                     </tr>
                 </tbody>
@@ -199,17 +217,42 @@
                 <input type="hidden" name="id" id="inputId">
 
                 <div class="form-grid">
-                    <div>
-                        <label class="form-label">Mã Môn học <span style="color:red">*</span></label>
-                        <input type="text" name="subjectCode" id="inputCode" class="form-control" placeholder="VD: IT3010" required>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <label class="form-label">Mã Môn <span style="color:red">*</span></label>
+                            <input type="text" name="subjectCode" id="inputCode" class="form-control" required placeholder="VD: IT3010">
+                        </div>
+                        <div>
+                            <label class="form-label">Số Tín chỉ <span style="color:red">*</span></label>
+                            <input type="number" name="credit" id="inputCredit" class="form-control" required min="1" max="10">
+                        </div>
                     </div>
+
                     <div>
                         <label class="form-label">Tên Môn học <span style="color:red">*</span></label>
-                        <input type="text" name="name" id="inputName" class="form-control" placeholder="VD: Lập trình Web" required>
+                        <input type="text" name="name" id="inputName" class="form-control" required placeholder="VD: Lập trình Web nâng cao">
                     </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <label class="form-label">Ngành học</label>
+                            <select name="targetMajor" id="inputMajor" class="form-control">
+                                <option value="Công nghệ thông tin">Công nghệ thông tin</option>
+                                <option value="Kinh tế">Kinh tế</option>
+                                <option value="Ngôn ngữ Anh">Ngôn ngữ Anh</option>
+                                <option value="Luật">Luật</option>
+                                <option value="Đại cương">Đại cương</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Học kỳ (Lộ trình)</label>
+                            <input type="number" name="semester" id="inputSemester" class="form-control" required min="1" max="10" value="1">
+                        </div>
+                    </div>
+                    
                     <div>
-                        <label class="form-label">Số Tín chỉ <span style="color:red">*</span></label>
-                        <input type="number" name="credit" id="inputCredit" class="form-control" min="1" max="10" required>
+                        <label class="form-label">Mô tả ngắn</label>
+                        <textarea name="description" id="inputDesc" class="form-control" rows="3" placeholder="Mô tả về môn học này..."></textarea>
                     </div>
                 </div>
 
@@ -223,7 +266,6 @@
 
     <script>
         lucide.createIcons();
-        
         const modal = document.getElementById('modal');
         const form = document.getElementById('subjectForm');
 
@@ -237,11 +279,14 @@
             resetForm();
             document.getElementById('modalTitle').innerText = "Cập nhật Môn Học";
             
-            // Lấy dữ liệu từ button
+            // Đổ dữ liệu từ button vào form
             document.getElementById('inputId').value = btn.getAttribute('data-id');
             document.getElementById('inputCode').value = btn.getAttribute('data-code');
             document.getElementById('inputName').value = btn.getAttribute('data-name');
             document.getElementById('inputCredit').value = btn.getAttribute('data-credit');
+            document.getElementById('inputMajor').value = btn.getAttribute('data-major');
+            document.getElementById('inputSemester').value = btn.getAttribute('data-semester');
+            document.getElementById('inputDesc').value = btn.getAttribute('data-desc');
 
             modal.style.display = 'flex';
         }
@@ -250,17 +295,21 @@
             modal.style.display = 'none';
         }
 
-        // Đóng modal khi click ra ngoài
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeModal();
-        });
-
         function resetForm() {
             document.getElementById('inputId').value = "";
             document.getElementById('inputCode').value = "";
             document.getElementById('inputName').value = "";
             document.getElementById('inputCredit').value = "";
+            document.getElementById('inputDesc').value = "";
+            // Reset select về default
+            document.getElementById('inputMajor').value = "Công nghệ thông tin";
+            document.getElementById('inputSemester').value = "1";
         }
+
+        // Đóng modal khi click ra ngoài
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
     </script>
 </body>
 </html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Nhóm học | LMS Admin</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* --- STYLE ĐỒNG BỘ (Layout Chuẩn) --- */
+        :root {
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --sidebar-width: 260px;
+        }
+
+        /* 1. Body Setup */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; 
+            display: block; /* Quan trọng để tránh lỗi flex */
+        }
+
+        /* 2. Sidebar (Fixed) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--surface);
+            height: 100vh;
+            position: fixed; top: 0; left: 0;
+            border-right: 1px solid var(--border);
+            padding: 32px 24px;
+            z-index: 100;
+            display: flex; flex-direction: column;
+            box-sizing: border-box;
+        }
+        
+        .logo { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; gap: 10px; margin-bottom: 40px; text-decoration: none; align-items: center; }
+        .nav-link { display: flex; gap: 12px; padding: 12px; color: var(--text-sub); text-decoration: none; font-weight: 500; border-radius: 8px; margin-bottom: 4px; transition: 0.2s; align-items: center; }
+        .nav-link:hover, .nav-link.active { background: #e0e7ff; color: var(--primary); }
+        .logout-btn { margin-top: auto; color: #ef4444; }
+
+        /* 3. Main Content (Đẩy sang phải) */
+        .main {
+            margin-left: var(--sidebar-width);
+            width: auto;
+            padding: 40px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* --- CÁC THÀNH PHẦN CHI TIẾT --- */
+
+        /* Header & Toolbar */
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .title-section h1 { font-size: 28px; font-weight: 700; margin: 0; }
+        .title-section p { color: var(--text-sub); font-size: 14px; margin-top: 5px; }
+
+        .btn-add { 
+            background: var(--primary); color: white; border: none; padding: 10px 20px; 
+            border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; gap: 8px; align-items: center; 
+            transition: 0.2s;
+        }
+        .btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+        /* Table */
+        .table-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f8fafc; padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-sub); border-bottom: 1px solid var(--border); text-transform: uppercase; white-space: nowrap; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; color: var(--text-main); }
+        tr:hover { background: #fdfbff; }
+
+        /* Badges & Images */
+        .group-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
+        .tag-pill { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid #e2e8f0; }
+        
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        .status-private { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .status-public { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: white; width: 550px; padding: 32px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+        
+        .form-label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: var(--text-main); }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 14px; }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px #e0e7ff; }
+        
+        /* Checkbox Switch */
+        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; }
+        .checkbox-wrapper input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+        .checkbox-wrapper label { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text-main); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <a href="/admin/dashboard" class="logo"><i data-lucide="command"></i> LMS ADMIN</a>
+        
+        <a href="/admin/dashboard" class="nav-link"><i data-lucide="layout-grid"></i> Tổng quan</a>
+        <a href="/admin/users" class="nav-link"><i data-lucide="users"></i> Người dùng</a>
+        <a href="/admin/subjects" class="nav-link"><i data-lucide="book-open"></i> Môn học</a>
+        <a href="/admin/groups" class="nav-link active"><i data-lucide="messages-square"></i> Nhóm học</a>
+        <a href="/admin/history" class="nav-link"><i data-lucide="history"></i> Lịch sử</a>
+        
+        <a href="/logout" class="nav-link logout-btn"><i data-lucide="log-out"></i> Đăng xuất</a>
+    </div>
+
+    <div class="main">
+        
+        <div class="header-flex">
+            <div class="title-section">
+                <h1>Quản lý Nhóm học</h1>
+                <p>Tạo và quản lý các nhóm thảo luận cho sinh viên.</p>
+            </div>
+            <button onclick="openModal()" class="btn-add">
+                <i data-lucide="plus-circle" size="18"></i> Thêm Nhóm
+            </button>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">ID</th>
+                        <th style="width: 60px;">Ảnh</th>
+                        <th>Tên Nhóm</th>
+                        <th>Chủ đề (Tag)</th>
+                        <th>Thành viên</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align: right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="g : ${groups}">
+                        <td style="color: #94a3b8; font-weight: bold;" th:text="${g.id}">1</td>
+                        <td>
+                            <img th:src="${g.image != null ? g.image : 'https://placehold.co/40'}" class="group-img" alt="img">
+                        </td>
+                        
+                        <td style="font-weight: 600;" th:text="${g.name}">Nhóm Java</td>
+                        
+                        <td><span class="tag-pill" th:text="${g.subjectTag}">CNTT</span></td>
+                        
+                        <td style="font-size: 13px;">
+                            <span style="font-weight: 600;" th:text="${g.members}">0</span> 
+                            <span style="color: #94a3b8;">/</span> 
+                            <span th:text="${g.maxMembers}">500</span>
+                        </td>
+
+                        <td>
+                            <span th:if="${g.isPrivate}" class="status-badge status-private"><i data-lucide="lock" size="10"></i> Riêng tư</span>
+                            <span th:unless="${g.isPrivate}" class="status-badge status-public"><i data-lucide="globe" size="10"></i> Công khai</span>
+                        </td>
+
+                        <td style="text-align: right;">
+                            <button style="border:none; background:none; cursor:pointer; color:#64748b; margin-right:8px;"
+                                th:data-id="${g.id}"
+                                th:data-name="${g.name}"
+                                th:data-tag="${g.subjectTag}"
+                                th:data-image="${g.image}"
+                                th:data-desc="${g.description}"
+                                th:data-max="${g.maxMembers}"
+                                th:data-private="${g.isPrivate}"
+                                onclick="editGroup(this)">
+                                <i data-lucide="edit-3" size="18"></i>
+                            </button>
+                            <a th:href="@{/admin/groups/delete/{id}(id=${g.id})}" 
+                               onclick="return confirm('Bạn có chắc muốn xóa nhóm này?')" style="color:#ef4444;">
+                                <i data-lucide="trash-2" size="18"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr th:if="${#lists.isEmpty(groups)}">
+                        <td colspan="7" style="text-align: center; padding: 50px; color: #94a3b8;">
+                            <i data-lucide="users" size="32" style="margin-bottom: 10px; display: block; margin: 0 auto 10px auto;"></i>
+                            Chưa có nhóm học nào.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="modal-overlay">
+        <div class="modal">
+            <h2 id="modalTitle" style="margin-top: 0; margin-bottom: 24px;">Thêm Nhóm Mới</h2>
+            
+            <form action="/admin/groups/save" method="post" id="groupForm">
+                <input type="hidden" name="id" id="inputId">
+
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label">Tên Nhóm <span style="color:red">*</span></label>
+                    <input type="text" name="name" id="inputName" class="form-control" required placeholder="VD: Cộng đồng Spring Boot">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label class="form-label">Chủ đề (Tag)</label>
+                        <input type="text" name="subjectTag" id="inputTag" class="form-control" placeholder="VD: CNTT">
+                    </div>
+                    <div>
+                        <label class="form-label">Thành viên tối đa</label>
+                        <input type="number" name="maxMembers" id="inputMax" class="form-control" value="500">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label">Ảnh đại diện (URL)</label>
+                    <input type="text" name="image" id="inputImage" class="form-control" placeholder="https://example.com/image.png">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label">Mô tả ngắn</label>
+                    <textarea name="description" id="inputDesc" class="form-control" rows="3" placeholder="Giới thiệu về nhóm..."></textarea>
+                </div>
+
+                <div class="checkbox-wrapper" onclick="document.getElementById('inputPrivate').click()">
+                    <input type="checkbox" name="isPrivate" id="inputPrivate">
+                    <label for="inputPrivate">Đây là nhóm Riêng tư (Private)</label>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px;">
+                    <button type="button" onclick="closeModal()" style="padding: 10px 20px; background: #f1f5f9; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: #475569;">Hủy</button>
+                    <button type="submit" style="padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Lưu Lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const modal = document.getElementById('modal');
+
+        function openModal() {
+            resetForm();
+            document.getElementById('modalTitle').innerText = "Thêm Nhóm Mới";
+            modal.style.display = 'flex';
+        }
+
+        function editGroup(btn) {
+            resetForm();
+            document.getElementById('modalTitle').innerText = "Cập nhật Nhóm";
+            
+            document.getElementById('inputId').value = btn.getAttribute('data-id');
+            document.getElementById('inputName').value = btn.getAttribute('data-name');
+            document.getElementById('inputTag').value = btn.getAttribute('data-tag');
+            document.getElementById('inputImage').value = btn.getAttribute('data-image');
+            document.getElementById('inputDesc').value = btn.getAttribute('data-desc');
+            document.getElementById('inputMax').value = btn.getAttribute('data-max');
+            
+            // Xử lý Checkbox
+            const isPrivate = btn.getAttribute('data-private') === 'true';
+            document.getElementById('inputPrivate').checked = isPrivate;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        function resetForm() {
+            document.getElementById('inputId').value = "";
+            document.getElementById('inputName').value = "";
+            document.getElementById('inputTag').value = "";
+            document.getElementById('inputImage').value = "";
+            document.getElementById('inputDesc').value = "";
+            document.getElementById('inputMax').value = "500";
+            document.getElementById('inputPrivate').checked = false;
+        }
+
+        // Đóng modal khi click ra ngoài
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 package com.example.spbn3.repository;
 
 import com.example.spbn3.entity.LearningHistory;
-import com.example.spbn3.entity.Subject; // Nhớ import Subject
+import com.example.spbn3.entity.Subject; 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,29 +14,44 @@ import java.util.List;
 public interface LearningHistoryRepository extends JpaRepository<LearningHistory, Long> {
 
     // =========================================================================
-    // 🔥 PHẦN 1: CÁC HÀM MỚI CHO TRANG TOPIC DETAIL (FOCUS MODE)
+    // 🔥 PHẦN 1: DÀNH CHO ADMIN (QUẢN LÝ & TÌM KIẾM)
     // =========================================================================
 
-    // 1. Lấy danh sách ID các bài đã học TRONG MỘT MÔN CỤ THỂ
+    // 1. Admin: Lấy toàn bộ lịch sử (Mới nhất lên đầu)
+    List<LearningHistory> findAllByOrderByViewedAtDesc();
+
+    // 2. Admin: Tìm kiếm theo Tên hoặc Mã sinh viên
+    @Query("SELECT h FROM LearningHistory h WHERE " +
+           "LOWER(h.student.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(h.student.studentCode) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "ORDER BY h.viewedAt DESC")
+    List<LearningHistory> searchByKeyword(@Param("keyword") String keyword);
+
+
+    // =========================================================================
+    // 🔥 PHẦN 2: DÀNH CHO SINH VIÊN (FOCUS MODE & TOPIC DETAIL)
+    // =========================================================================
+
+    // Kiểm tra đã học chưa
+    boolean existsByStudentIdAndTopicId(Long studentId, Long topicId);
+
+    // Lấy danh sách ID các bài đã học TRONG MỘT MÔN CỤ THỂ
     @Query("SELECT h.topic.id FROM LearningHistory h WHERE h.student.id = :studentId AND h.topic.subject.id = :subjectId")
     List<Long> findCompletedTopicIdsByStudentAndSubject(@Param("studentId") Long studentId, @Param("subjectId") Long subjectId);
 
-    // 2. Đếm số bài đã học TRONG MỘT MÔN CỤ THỂ
+    // Đếm số bài đã học TRONG MỘT MÔN CỤ THỂ
     @Query("SELECT COUNT(h) FROM LearningHistory h WHERE h.student.id = :studentId AND h.topic.subject.id = :subjectId")
     long countCompletedBySubject(@Param("studentId") Long studentId, @Param("subjectId") Long subjectId);
 
 
     // =========================================================================
-    // 🔥 PHẦN 2: CÁC HÀM CƠ BẢN & DASHBOARD
+    // 🔥 PHẦN 3: DASHBOARD & THỐNG KÊ
     // =========================================================================
-
-    // Kiểm tra xem sinh viên đã học bài này chưa
-    boolean existsByStudentIdAndTopicId(Long studentId, Long topicId);
 
     // Lấy tất cả lịch sử của SV
     List<LearningHistory> findByStudentId(Long studentId);
 
-    // Lấy lịch sử sắp xếp mới nhất (Cho trang History chính)
+    // Lấy lịch sử sắp xếp mới nhất
     List<LearningHistory> findByStudentIdOrderByViewedAtDesc(Long studentId);
 
     // Lấy danh sách TOÀN BỘ ID bài đã học (Để lọc gợi ý AI)
@@ -51,7 +66,7 @@ public interface LearningHistoryRepository extends JpaRepository<LearningHistory
     @Query("SELECT h FROM LearningHistory h WHERE h.student.id = :studentId AND h.topic.subject.id = :subjectId")
     List<LearningHistory> findByStudentIdAndSubjectId(@Param("studentId") Long studentId, @Param("subjectId") Long subjectId);
 
-    // Dùng LIKE để đếm đúng số bài đã học theo ngành (Fix lỗi 0% Progress)
+    // Đếm số bài đã học theo ngành (Fix lỗi 0% Progress)
     @Query("SELECT COUNT(DISTINCT lh.topic.id) FROM LearningHistory lh " +
            "JOIN lh.topic t JOIN t.subject s " +
            "WHERE lh.student.id = :studentId AND s.targetMajor LIKE %:major%")
@@ -70,12 +85,7 @@ public interface LearningHistoryRepository extends JpaRepository<LearningHistory
     // Đếm tổng số bài đã học của SV
     long countByStudentId(Long studentId);
 
-    // =========================================================================
-    // 🔥 PHẦN 3: GỢI Ý NHÓM (STUDY GROUP RECOMMENDATION)
-    // =========================================================================
-
-    // 🔥 QUAN TRỌNG: Lấy danh sách các MÔN HỌC mà sinh viên đã từng xem
-    // (Dùng để so khớp Tag và gợi ý nhóm ở trang History)
+    // Lấy danh sách các MÔN HỌC mà sinh viên đã từng xem
     @Query("SELECT DISTINCT h.topic.subject FROM LearningHistory h WHERE h.student.id = :studentId")
     List<Subject> findLearnedSubjects(@Param("studentId") Long studentId);
 }

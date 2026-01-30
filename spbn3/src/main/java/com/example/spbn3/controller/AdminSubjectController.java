@@ -16,32 +16,32 @@ public class AdminSubjectController {
     @Autowired
     private SubjectService subjectService;
 
-    // 🟢 1. HIỂN THỊ DANH SÁCH (Tích hợp Modal Thêm/Sửa)
+    // 🟢 1. HIỂN THỊ DANH SÁCH & TÌM KIẾM
     @GetMapping
     public String listSubjects(@RequestParam(required = false) String keyword, Model model) {
         List<Subject> list;
 
-        // Logic tìm kiếm
+        // Logic tìm kiếm: Nếu có từ khóa thì tìm, không thì lấy hết
         if (keyword != null && !keyword.trim().isEmpty()) {
             list = subjectService.searchSubjects(keyword);
         } else {
             list = subjectService.getAllSubjects();
         }
 
+        // Đưa dữ liệu ra View
         model.addAttribute("subjects", list);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("activePage", "subjects");
+        model.addAttribute("keyword", keyword); // Để giữ lại từ khóa trong ô search
 
-        // 🔥 QUAN TRỌNG: Phải có dòng này thì Modal mới hoạt động được!
-        // Nó tạo một đối tượng rỗng để Form trong Modal hứng dữ liệu.
+        // 🔥 QUAN TRỌNG: Tạo đối tượng rỗng để Modal "Thêm mới" hứng dữ liệu
         model.addAttribute("subject", new Subject()); 
 
         return "admin/subject-list";
     }
 
-    // 🟢 2. LƯU DỮ LIỆU (Xử lý cho cả Thêm mới và Cập nhật từ Modal)
+    // 🟢 2. LƯU DỮ LIỆU (Dùng chung cho cả Thêm mới và Cập nhật)
     @PostMapping("/save")
     public String saveSubject(@ModelAttribute("subject") Subject subject) {
+        // Service sẽ tự kiểm tra: Nếu subject.id có giá trị -> Update, nếu null -> Insert
         subjectService.addSubject(subject);
         return "redirect:/admin/subjects";
     }

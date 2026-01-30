@@ -1,10 +1,8 @@
 package com.example.spbn3.controller;
 
-import com.example.spbn3.service.UserService;
-import com.example.spbn3.service.StudyGroupService;
-import com.example.spbn3.service.SubjectService;
-import com.example.spbn3.repository.LearningHistoryRepository;
+import com.example.spbn3.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,60 +13,42 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/admin")
 public class AdminController {
 
-    // Sửa StudentService thành UserService để lấy tổng số user chung
-    @Autowired
-    private UserService userService; 
+    @Autowired private StudentRepository studentRepo;
+    @Autowired private SubjectRepository subjectRepo;
+    @Autowired private StudyGroupRepository groupRepo;
+    @Autowired private LearningHistoryRepository historyRepo;
 
-    @Autowired
-    private StudyGroupService studyGroupService;
-
-    @Autowired
-    private SubjectService subjectService;
-
-    @Autowired
-    private LearningHistoryRepository historyRepo;
-
-    // 🟢 1. TRANG DASHBOARD (QUAN TRỌNG NHẤT)
+    // ==========================================================
+    // CHỈ GIỮ LẠI DASHBOARD (THỐNG KÊ TỔNG QUAN)
+    // ==========================================================
     @GetMapping("/dashboard")
     public String showDashboard(Model model) {
         
-        // --- Thống kê ---
-        int totalStudents = 0;
-        try { totalStudents = userService.getAllUsers().size(); } catch (Exception e) {}
-
-        int totalGroups = 0;
-        try { totalGroups = studyGroupService.getAllGroups().size(); } catch (Exception e) {}
-
-        int totalSubjects = 0; 
-        try { totalSubjects = subjectService.getAllSubjects().size(); } catch (Exception e) {}
+        // 1. Số liệu thống kê nhanh (Dùng count cho nhẹ DB)
+        long totalStudents = studentRepo.count();
+        long totalSubjects = subjectRepo.count();
+        long totalGroups = groupRepo.count();
 
         model.addAttribute("totalStudents", totalStudents);
-        model.addAttribute("totalGroups", totalGroups);
         model.addAttribute("totalSubjects", totalSubjects);
+        model.addAttribute("totalGroups", totalGroups);
+
+        // 2. Bảng "Hoạt động gần đây" (Chỉ lấy 5 dòng để Admin xem lướt)
+        var recentHistory = historyRepo.findAll(
+            PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "viewedAt"))
+        ).getContent();
         
+        model.addAttribute("recentHistory", recentHistory);
+
         return "admin/dashboard"; 
     }
 
-    // 🟢 2. TỰ ĐỘNG CHUYỂN HƯỚNG (Vào /admin tự sang /admin/dashboard)
+    // Tự động chuyển hướng về dashboard khi vào /admin
     @GetMapping
     public String adminHome() {
         return "redirect:/admin/dashboard";
     }
 
-    // 🟢 3. LỊCH SỬ HỌC TẬP (Giữ lại cái này)
-    @GetMapping("/history")
-    public String listGlobalHistory(Model model) {
-        var allHistory = historyRepo.findAll(Sort.by(Sort.Direction.DESC, "viewedAt"));
-        model.addAttribute("historyList", allHistory);
-        return "admin/history-list";
-    }
-
-    // 🟢 4. CHUYỂN HƯỚNG NHÓM HỌC (Giữ lại cái này)
-    @GetMapping("/groups")
-    public String redirectGroups() {
-        return "redirect:/admin/groups"; 
-    }
-
-    // ❌ ĐÃ XÓA: Hàm /users (Vì AdminUserController đã lo)
-    // ❌ ĐÃ XÓA: Hàm /subjects (Vì AdminSubjectController đã lo)
+    // ❌ QUAN TRỌNG: Đã XÓA các hàm /subjects, /users, /groups ở đây.
+    // Các đường dẫn đó giờ sẽ do AdminSubjectController, AdminUserController... xử lý.
 }

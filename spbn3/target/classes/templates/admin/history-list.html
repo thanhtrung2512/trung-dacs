@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch sử Học tập | LMS Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* --- STYLE CHUẨN ĐÃ FIX LAYOUT (COPY TỪ GROUP-LIST) --- */
+        :root {
+            --bg-body: #f8fafc; --surface: #ffffff; --primary: #4f46e5;
+            --text-main: #0f172a; --text-sub: #64748b; --border: #e2e8f0; --sidebar-width: 260px;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; display: block; }
+
+        /* Sidebar Cố định */
+        .sidebar {
+            width: var(--sidebar-width); background: var(--surface); height: 100vh;
+            position: fixed; top: 0; left: 0; border-right: 1px solid var(--border);
+            padding: 32px 24px; z-index: 100; display: flex; flex-direction: column;
+            box-sizing: border-box;
+        }
+        .logo { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; gap: 10px; margin-bottom: 40px; text-decoration: none; align-items: center; }
+        .nav-link { display: flex; gap: 12px; padding: 12px; color: var(--text-sub); text-decoration: none; font-weight: 500; border-radius: 8px; margin-bottom: 4px; transition: 0.2s; align-items: center; }
+        .nav-link:hover, .nav-link.active { background: #e0e7ff; color: var(--primary); }
+        .logout-btn { margin-top: auto; color: #ef4444; }
+
+        /* Main Content (Margin-left chuẩn) */
+        .main { margin-left: var(--sidebar-width); padding: 40px; min-height: 100vh; position: relative; }
+
+        /* Header & Toolbar */
+        .header-container { margin-bottom: 30px; }
+        .title-section h1 { font-size: 28px; font-weight: 700; margin: 0; }
+        .title-section p { color: var(--text-sub); font-size: 14px; margin-top: 5px; }
+
+        /* Thanh tìm kiếm */
+        .toolbar {
+            background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border);
+            margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .search-form { display: flex; align-items: center; position: relative; width: 100%; }
+        .search-icon { position: absolute; left: 12px; color: #94a3b8; width: 18px; }
+        .search-input {
+            width: 100%; padding: 12px 12px 12px 40px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 14px; outline: none; background: #f8fafc; transition: 0.2s; box-sizing: border-box;
+        }
+        .search-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px #e0e7ff; }
+
+        /* Table Style */
+        .table-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f8fafc; padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-sub); border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; color: var(--text-main); }
+        tr:hover { background: #fdfbff; }
+
+        /* UI Components */
+        .student-info { display: flex; align-items: center; }
+        .avatar-circle {
+            width: 36px; height: 36px; background: #e0e7ff; color: var(--primary);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px; margin-right: 12px; text-transform: uppercase;
+        }
+        .code-badge { font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569; font-size: 12px; }
+        .subject-badge { background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        
+        .time-cell { display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <a href="/admin/dashboard" class="logo"><i data-lucide="command"></i> LMS ADMIN</a>
+        
+        <a href="/admin/dashboard" class="nav-link"><i data-lucide="layout-grid"></i> Tổng quan</a>
+        <a href="/admin/users" class="nav-link"><i data-lucide="users"></i> Người dùng</a>
+        <a href="/admin/subjects" class="nav-link"><i data-lucide="book-open"></i> Môn học</a>
+        <a href="/admin/groups" class="nav-link"><i data-lucide="messages-square"></i> Nhóm học</a>
+        <a href="/admin/history" class="nav-link active"><i data-lucide="history"></i> Lịch sử</a>
+        
+        <a href="/logout" class="nav-link logout-btn"><i data-lucide="log-out"></i> Đăng xuất</a>
+    </div>
+
+    <div class="main">
+        
+        <div class="header-container">
+            <div class="title-section">
+                <h1>Lịch sử Học tập</h1>
+                <p>Theo dõi tiến độ và hoạt động xem bài giảng của sinh viên.</p>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <form action="/admin/history" method="get" class="search-form">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" name="keyword" class="search-input" 
+                       placeholder="Nhập tên sinh viên hoặc mã sinh viên để tìm kiếm..." 
+                       th:value="${keyword}">
+            </form>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Sinh viên</th>
+                        <th style="width: 15%;">Mã SV</th>
+                        <th style="width: 25%;">Bài học</th>
+                        <th style="width: 15%;">Môn học</th>
+                        <th style="width: 15%;">Thời gian</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="h : ${histories}">
+                        <td>
+                            <div class="student-info">
+                                <div class="avatar-circle" 
+                                     th:text="${h.student.fullName != null ? #strings.substring(h.student.fullName, 0, 1) : 'U'}">
+                                    A
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600;" th:text="${h.student.fullName}">Tên SV</div>
+                                    <div style="font-size: 12px; color: #64748b;" th:text="${h.student.email}">email@test.com</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="code-badge" th:text="${h.student.studentCode}">SV001</span>
+                        </td>
+
+                        <td>
+                            <span th:if="${h.topic != null}" th:text="${h.topic.title}" style="font-weight: 500;">Bài 1</span>
+                            <span th:unless="${h.topic != null}" style="color: #ef4444; font-style: italic;">(Đã xóa)</span>
+                        </td>
+
+                        <td>
+                            <span th:if="${h.topic != null && h.topic.subject != null}" 
+                                  class="subject-badge"
+                                  th:text="${h.topic.subject.name}">Java</span>
+                        </td>
+
+                        <td>
+                            <div class="time-cell">
+                                <i data-lucide="clock" size="14"></i>
+                                <span th:text="${#temporals.format(h.viewedAt, 'HH:mm - dd/MM/yyyy')}">10:00 - 12/10</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(histories)}">
+                        <td colspan="5" style="text-align: center; padding: 60px; color: #94a3b8;">
+                            <i data-lucide="search-x" size="40" style="margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto; opacity: 0.5;"></i>
+                            <p>Không tìm thấy dữ liệu lịch sử nào.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

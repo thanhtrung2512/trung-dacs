@@ -33,19 +33,27 @@ public class TopicService {
         return topicRepository.findByTitleContainingIgnoreCase(keyword);
     }
 
-    // =======================================================
-    // 🔥 HÀM SỬA LỖI: TÌM KIẾM TRONG MÔN HỌC (Đang bị thiếu)
-    // =======================================================
+    // 5. Tìm kiếm trong môn học
     public List<Topic> searchTopicsInSubject(Long subjectId, String keyword) {
-        // Gọi hàm repository tương ứng
         return topicRepository.findBySubjectIdAndTitleContainingIgnoreCase(subjectId, keyword);
     }
     
-    // =======================================================
-    // 5. LẤY BÀI TIẾP THEO (Logic fallback)
-    // =======================================================
+    // 6. Lấy bài tiếp theo (Logic fallback)
     public Topic getNextTopic(Long subjectId, Long currentTopicId) {
-        // Gọi hàm findFirst... mới cập nhật trong Repository
         return topicRepository.findFirstBySubjectIdAndIdGreaterThanOrderByIdAsc(subjectId, currentTopicId);
+    }
+
+    // =======================================================
+    // 🔥 BỔ SUNG CÁC HÀM CÒN THIẾU CHO ADMIN CONTROLLER
+    // =======================================================
+
+    // 7. Lưu bài học (Thêm mới hoặc Cập nhật)
+    public void saveTopic(Topic topic) {
+        topicRepository.save(topic);
+    }
+
+    // 8. Xóa bài học
+    public void deleteTopic(Long id) {
+        topicRepository.deleteById(id);
     }
 }

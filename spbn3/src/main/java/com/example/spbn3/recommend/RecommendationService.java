@@ -76,6 +76,13 @@ public class RecommendationService {
         List<LearningHistory> histories = historyRepository.findByStudentIdOrderByViewedAtDesc(sId);
         analytics.put("majorRecommendations", getMajorRoadmap(student, histories));
         analytics.put("recommendedGroups", getRecommendedStudyGroups(student)); // Cho Dashboard
+        
+        // --- PHẦN THÊM MỚI ---
+        // Lấy danh sách xu thế (trendingTopics) để hiển thị ngoài HTML
+        List<Topic> trending = topicRepository.findTrendingTopics(searchKey, 3);
+        analytics.put("trendingTopics", trending); 
+        // ---------------------
+
         analytics.put("smartSuggestions", getSmartTopicSuggestions(student, histories));
 
         return analytics;

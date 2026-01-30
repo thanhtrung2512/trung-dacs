@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | The Masterpiece</title>
+    <title>Admin Dashboard | LMS Pro</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -11,144 +11,51 @@
 
     <style>
         :root {
-            /* Palette màu "Luxury Clean" */
-            --bg-body: #f3f4f6;       /* Xám khói nhạt */
-            --surface: #ffffff;       /* Trắng tinh khiết */
-            --primary: #4338ca;       /* Indigo đậm sang trọng */
-            --primary-light: #e0e7ff; 
-            --text-main: #111827;     /* Đen than */
-            --text-sub: #6b7280;      /* Xám trung tính */
-            
-            /* Hiệu ứng Vật lý (Physics) */
-            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
-            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.01);
-            --radius: 16px;           /* Bo góc vừa phải, tinh tế */
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-body: #f3f4f6; --surface: #ffffff; --primary: #4338ca; --primary-light: #e0e7ff; 
+            --text-main: #111827; --text-sub: #6b7280;
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            --radius: 16px; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        
         body { background-color: var(--bg-body); color: var(--text-main); display: flex; min-height: 100vh; }
 
-        /* --- SIDEBAR (NAVBAR) --- */
-        .sidebar {
-            width: 260px; background: var(--surface);
-            height: 100vh; position: fixed; top: 0; left: 0;
-            border-right: 1px solid #e5e7eb;
-            padding: 32px 24px;
-            display: flex; flex-direction: column;
-            z-index: 50;
-        }
-
-        .logo {
-            display: flex; align-items: center; gap: 12px;
-            font-size: 20px; font-weight: 700; color: var(--text-main);
-            text-decoration: none; margin-bottom: 48px;
-        }
-        .logo-icon {
-            width: 32px; height: 32px; background: var(--primary); color: white;
-            border-radius: 8px; display: flex; align-items: center; justify-content: center;
-        }
-
+        .sidebar { width: 260px; background: var(--surface); height: 100vh; position: fixed; top: 0; left: 0; border-right: 1px solid #e5e7eb; padding: 32px 24px; display: flex; flex-direction: column; z-index: 50; }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; color: var(--text-main); text-decoration: none; margin-bottom: 48px; }
+        .logo-icon { width: 32px; height: 32px; background: var(--primary); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
         .nav-menu { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-        .nav-link {
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 16px; border-radius: 10px;
-            color: var(--text-sub); text-decoration: none;
-            font-weight: 500; font-size: 14px;
-            transition: var(--transition);
-        }
-        
-        /* Active & Hover State */
-        .nav-link:hover, .nav-link.active {
-            background: var(--bg-body); color: var(--primary);
-        }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: var(--text-sub); text-decoration: none; font-weight: 500; font-size: 14px; transition: var(--transition); }
+        .nav-link:hover, .nav-link.active { background: var(--bg-body); color: var(--primary); }
         .nav-link.active { font-weight: 600; background: var(--primary-light); }
 
-        /* --- MAIN AREA --- */
-        .main-content {
-            margin-left: 260px; flex: 1; padding: 40px;
-            max-width: 1600px; /* Giới hạn chiều rộng để mắt dễ nhìn */
-        }
+        .main-content { margin-left: 260px; flex: 1; padding: 40px; max-width: 1600px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; }
+        .greeting h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .date-pill { background: var(--surface); border: 1px solid #e5e7eb; padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 600; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
 
-        /* Header */
-        .header {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            margin-bottom: 40px;
-        }
-        .greeting h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
-        .greeting p { color: var(--text-sub); font-size: 15px; }
-
-        .date-pill {
-            background: var(--surface); border: 1px solid #e5e7eb;
-            padding: 8px 16px; border-radius: 100px;
-            font-size: 13px; font-weight: 600; color: var(--text-sub);
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        /* --- CARDS GRID (BENTO STYLE) --- */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 Cột đều nhau */
-            gap: 24px;
-        }
-
-        /* Card Design */
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 28px;
-            position: relative; overflow: hidden;
-            border: 1px solid #f3f4f6; /* Viền siêu mỏng */
-            box-shadow: var(--shadow-card);
-            text-decoration: none; color: inherit;
-            display: flex; flex-direction: column; justify-content: space-between;
-            height: 180px; /* Chiều cao cố định */
-            transition: var(--transition);
-        }
-
-        /* Hover Effect: Float Up */
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-hover);
-            border-color: rgba(67, 56, 202, 0.1);
-        }
-
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .card { background: var(--surface); border-radius: var(--radius); padding: 28px; border: 1px solid #f3f4f6; box-shadow: var(--shadow-card); text-decoration: none; color: inherit; display: flex; flex-direction: column; justify-content: space-between; height: 180px; transition: var(--transition); }
+        .card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); border-color: rgba(67, 56, 202, 0.1); }
         .card-top { display: flex; justify-content: space-between; align-items: start; }
-        .icon-circle {
-            width: 48px; height: 48px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; transition: 0.3s;
-        }
-        
-        /* Màu sắc icon riêng biệt */
+        .icon-circle { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.3s; }
         .bg-indigo { background: #e0e7ff; color: #4338ca; }
         .bg-emerald { background: #d1fae5; color: #059669; }
         .bg-rose { background: #ffe4e6; color: #e11d48; }
-        
         .card:hover .icon-circle { transform: scale(1.1) rotate(5deg); }
-
-        .stat-number {
-            font-size: 36px; font-weight: 700; color: var(--text-main);
-            letter-spacing: -0.03em; margin-top: 15px;
-        }
-        .stat-label { font-size: 15px; font-weight: 500; color: var(--text-sub); }
-
-        /* Nút hành động nhanh ở góc phải card */
-        .card-arrow {
-            opacity: 0; transform: translateX(-10px);
-            transition: 0.3s; color: var(--primary);
-        }
+        .stat-number { font-size: 36px; font-weight: 700; color: var(--text-main); margin-top: 15px; }
         .card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+        .card-arrow { opacity: 0; transform: translateX(-10px); transition: 0.3s; color: var(--primary); }
 
-        /* Animation Loading */
+        .recent-section { margin-top: 40px; background: var(--surface); border-radius: var(--radius); padding: 24px; border: 1px solid #f3f4f6; box-shadow: var(--shadow-card); }
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 0; color: var(--text-sub); font-size: 13px; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 16px 0; border-bottom: 1px solid #f9fafb; font-size: 14px; color: var(--text-main); }
+        .status-badge { background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
         .fade-in { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); }
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
-        
+        .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-
     </style>
 </head>
 <body>
@@ -158,7 +65,6 @@
             <div class="logo-icon"><i data-lucide="command" size="18"></i></div>
             <span>LMS Admin</span>
         </a>
-
         <ul class="nav-menu">
             <li><a href="/admin/dashboard" class="nav-link active"><i data-lucide="layout-grid" size="18"></i>Tổng quan</a></li>
             <li><a href="/admin/users" class="nav-link"><i data-lucide="users" size="18"></i>Người dùng</a></li>
@@ -166,16 +72,12 @@
             <li><a href="/admin/groups" class="nav-link"><i data-lucide="message-square" size="18"></i>Nhóm học</a></li>
             <li><a href="/admin/history" class="nav-link"><i data-lucide="history" size="18"></i>Lịch sử</a></li>
         </ul>
-
         <div style="margin-top: auto;">
-            <a href="/logout" class="nav-link" style="color: #ef4444;">
-                <i data-lucide="log-out" size="18"></i>Đăng xuất
-            </a>
+            <a href="/logout" class="nav-link" style="color: #ef4444;"><i data-lucide="log-out" size="18"></i>Đăng xuất</a>
         </div>
     </aside>
 
     <main class="main-content">
-        
         <div class="header fade-in">
             <div class="greeting">
                 <h1>Tổng quan hệ thống</h1>
@@ -188,65 +90,56 @@
         </div>
 
         <div class="dashboard-grid">
-            
             <a href="/admin/users" class="card fade-in delay-1">
-                <div class="card-top">
-                    <div class="icon-circle bg-indigo"><i data-lucide="users"></i></div>
-                    <div class="card-arrow"><i data-lucide="arrow-right"></i></div>
-                </div>
-                <div>
-                    <div class="stat-number" th:text="${totalStudents}">0</div>
-                    <div class="stat-label">Sinh viên đăng ký</div>
-                </div>
+                <div class="card-top"><div class="icon-circle bg-indigo"><i data-lucide="users"></i></div><div class="card-arrow"><i data-lucide="arrow-right"></i></div></div>
+                <div><div class="stat-number" th:text="${totalStudents}">0</div><div class="stat-label">Sinh viên đăng ký</div></div>
             </a>
-
             <a href="/admin/subjects" class="card fade-in delay-2">
-                <div class="card-top">
-                    <div class="icon-circle bg-emerald"><i data-lucide="library"></i></div>
-                    <div class="card-arrow"><i data-lucide="arrow-right"></i></div>
-                </div>
-                <div>
-                    <div class="stat-number" th:text="${totalSubjects}">0</div>
-                    <div class="stat-label">Môn học hiện có</div>
-                </div>
+                <div class="card-top"><div class="icon-circle bg-emerald"><i data-lucide="library"></i></div><div class="card-arrow"><i data-lucide="arrow-right"></i></div></div>
+                <div><div class="stat-number" th:text="${totalSubjects}">0</div><div class="stat-label">Môn học hiện có</div></div>
             </a>
-
             <a href="/admin/groups" class="card fade-in delay-3">
-                <div class="card-top">
-                    <div class="icon-circle bg-rose"><i data-lucide="messages-square"></i></div>
-                    <div class="card-arrow"><i data-lucide="arrow-right"></i></div>
-                </div>
-                <div>
-                    <div class="stat-number" th:text="${totalGroups}">0</div>
-                    <div class="stat-label">Nhóm thảo luận</div>
-                </div>
+                <div class="card-top"><div class="icon-circle bg-rose"><i data-lucide="messages-square"></i></div><div class="card-arrow"><i data-lucide="arrow-right"></i></div></div>
+                <div><div class="stat-number" th:text="${totalGroups}">0</div><div class="stat-label">Nhóm thảo luận</div></div>
             </a>
-
         </div>
 
-        <div class="fade-in delay-3" style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #e5e7eb;">
-            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 20px; color: var(--text-main);">Truy cập nhanh</h3>
-            <div style="display: flex; gap: 16px;">
-                <a href="/admin/subjects" style="text-decoration: none; background: white; padding: 12px 20px; border-radius: 12px; border: 1px solid #e5e7eb; font-size: 14px; font-weight: 500; color: var(--text-main); transition: 0.2s; display: flex; align-items: center; gap: 8px;">
-                    <i data-lucide="plus-circle" size="16" color="#4338ca"></i> Thêm môn học mới
-                </a>
-                <a href="/admin/users" style="text-decoration: none; background: white; padding: 12px 20px; border-radius: 12px; border: 1px solid #e5e7eb; font-size: 14px; font-weight: 500; color: var(--text-main); transition: 0.2s; display: flex; align-items: center; gap: 8px;">
-                    <i data-lucide="search" size="16" color="#4338ca"></i> Tìm kiếm sinh viên
-                </a>
-            </div>
+        <div class="recent-section fade-in delay-3">
+            <div class="section-title"><i data-lucide="activity" size="20" color="#4338ca"></i>Hoạt động học tập gần đây</div>
+            <table>
+                <thead>
+                    <tr><th style="width: 30%">Sinh viên</th><th style="width: 40%">Bài học</th><th style="width: 20%">Thời gian</th><th style="width: 10%">Trạng thái</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="h : ${recentHistory}">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; background: #e0e7ff; color: #4338ca; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;">
+                                    <span th:text="${#strings.substring(h.student.fullName, 0, 1)}">A</span>
+                                </div>
+                                <span style="font-weight: 500;" th:text="${h.student.fullName}">Name</span>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-sub);" th:text="${h.topic.title}">Topic</td>
+                        
+                        <td style="font-size: 13px; color: var(--text-sub);" 
+                            th:text="${#temporals.format(h.viewedAt, 'HH:mm - dd/MM/yyyy')}">Date</td>
+                            
+                        <td><span class="status-badge">Vừa xem</span></td>
+                    </tr>
+                    <tr th:if="${recentHistory == null || recentHistory.isEmpty()}">
+                        <td colspan="4" style="text-align: center; padding: 30px; color: var(--text-sub);">Chưa có hoạt động nào.</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-
     </main>
 
     <script>
         lucide.createIcons();
-        
-        // Ngày tháng
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         let date = new Date().toLocaleDateString('vi-VN', options);
-        // Viết hoa chữ cái đầu
-        date = date.charAt(0).toUpperCase() + date.slice(1);
-        document.getElementById('currentDate').innerText = date;
+        document.getElementById('currentDate').innerText = date.charAt(0).toUpperCase() + date.slice(1);
     </script>
 </body>
 </html>
