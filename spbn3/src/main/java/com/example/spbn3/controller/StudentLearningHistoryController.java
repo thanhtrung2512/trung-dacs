@@ -3,6 +3,7 @@ package com.example.spbn3.controller;
 import com.example.spbn3.entity.*;
 import com.example.spbn3.repository.TopicRepository;
 import com.example.spbn3.service.*;
+import com.example.spbn3.recommend.RecommendationService; // IMPORT AI SERVICE
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,8 +22,11 @@ public class StudentLearningHistoryController {
     @Autowired private StudentService studentService;
     @Autowired private StudyGroupService studyGroupService;
     @Autowired private TopicRepository topicRepository;
+    
+    // 💉 INJECT BỘ NÃO AI VÀO CONTROLLER
+    @Autowired private RecommendationService recommendationService; 
 
-    // Giữ nguyên DTO nội bộ của bạn
+    // Giữ nguyên DTO nội bộ của bạn (Dùng cho giao diện)
     public static class SubjectStats {
         public Subject subject;
         public int progress;
@@ -44,6 +48,9 @@ public class StudentLearningHistoryController {
 
         Student student = studentService.getStudentByUsername(username).orElseThrow();
         
+        // ==========================================================
+        // 1. LOGIC CƠ BẢN: TÍNH TOÁN TIẾN ĐỘ MÔN HỌC (GIỮ NGUYÊN)
+        // ==========================================================
         List<LearningHistory> allHistory = learningHistoryService.getStudentHistory(student.getId());
 
         Map<Subject, List<LearningHistory>> historyBySubject = allHistory.stream()
@@ -51,17 +58,10 @@ public class StudentLearningHistoryController {
 
         List<SubjectStats> inProgressList = new ArrayList<>();
         List<SubjectStats> completedList = new ArrayList<>();
-        Set<String> keywords = new HashSet<>();
 
         for (Map.Entry<Subject, List<LearningHistory>> entry : historyBySubject.entrySet()) {
             Subject subject = entry.getKey();
             List<LearningHistory> subjectHistories = entry.getValue();
-
-            // Thu thập từ khóa từ môn đã học
-            keywords.add(subject.getName().toLowerCase());
-            if (subject.getTargetMajor() != null) {
-                keywords.add(subject.getTargetMajor().toLowerCase());
-            }
 
             long totalTopics = topicRepository.countBySubjectId(subject.getId());
             long completedCount = subjectHistories.stream()
@@ -86,35 +86,31 @@ public class StudentLearningHistoryController {
             }
         }
 
-        // Logic AI gợi ý nhóm
-        List<StudyGroup> allGroups = studyGroupService.getAllGroups();
-        Set<StudyGroup> aiResults = new LinkedHashSet<>();
+        // ==========================================================
+        // 🤖 2. LOGIC AI: GỌI THUẬT TOÁN TỪ RECOMMENDATION SERVICE
+        // ==========================================================
+        
+        // Thuật toán 1: KNN Collaborative Filtering (Gợi ý nhóm)
+        List<StudyGroup> aiGroups = recommendationService.getKnnGroupRecommendations(student.getId());
+        
+        // Thuật toán 2: Weighted KNN 3D (Phân tích động lực)
+        Map<String, Object> motivation = recommendationService.autoDetectMotivation(student.getId());
 
-        if (allGroups != null) {
-            for (StudyGroup group : allGroups) {
-                if (group.getSubjectTag() == null) continue;
-                String tag = group.getSubjectTag().toLowerCase();
-
-                // So khớp từ khóa môn học với Tag của nhóm
-                boolean isMatch = keywords.stream().anyMatch(k -> k.contains(tag));
-                
-                if (isMatch) {
-                    aiResults.add(group);
-                }
-            }
-            // 🔥 ĐÃ XÓA PHẦN FALLBACK (Vòng lặp tự thêm nhóm cho đủ 3)
-            // Việc xóa này giúp trang History chỉ hiện đúng những nhóm liên quan đến môn đã học.
-        }
-
+        // ==========================================================
+        // 3. ĐẨY DỮ LIỆU RA GIAO DIỆN (VIEW)
+        // ==========================================================
         model.addAttribute("student", student);
         model.addAttribute("inProgressList", inProgressList);
         model.addAttribute("completedList", completedList);
-        model.addAttribute("aiGroups", new ArrayList<>(aiResults));
+        
+        // Gắn dữ liệu AI vào Model
+        model.addAttribute("aiGroups", aiGroups); 
+        model.addAttribute("motivation", motivation);
 
         return "student/history";
     }
 
-    // Giữ nguyên các hàm xử lý nhóm bên dưới của bạn...
+    // Giữ nguyên hàm xem chi tiết nhóm
     @GetMapping("/groups/{id}")
     public String showGroupDetail(@PathVariable Long id, HttpSession session, Model model) {
         String username = (String) session.getAttribute("loggedInUser");

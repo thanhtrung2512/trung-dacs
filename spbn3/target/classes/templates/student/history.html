@@ -1,4 +1,4 @@
-v<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -177,10 +177,34 @@ v<!DOCTYPE html>
                 <div class="stat-icon" style="background: #dcfce7; color: #166534;"><i class="fas fa-check-circle"></i></div>
                 <div class="stat-info"><h3 th:text="${completedList.size()}">0</h3><p>Đã hoàn thành</p></div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #ffedd5; color: #c2410c;"><i class="fas fa-fire"></i></div>
-                <div class="stat-info"><h3>Cao</h3><p>Động lực</p></div>
+            
+            <div class="stat-card" th:if="${motivation != null}" th:style="'border-left: 5px solid ' + ${motivation['color']} + '; transition: 0.3s; flex-direction: column; align-items: flex-start; gap: 10px;'">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="stat-icon" th:style="'background: ' + ${motivation['color']} + '15; color: ' + ${motivation['color']} + '; width: 45px; height: 45px; font-size: 20px;'">
+                            <i th:class="${motivation['icon']}"></i>
+                        </div>
+                        <div>
+                            <h3 th:text="${motivation['label']}" th:style="'color: ' + ${motivation['color']} + '; font-size: 20px; margin: 0;'">Trạng thái</h3>
+                            <p style="font-size: 11px; font-weight: 700; color: var(--text-sub); margin: 0; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-microchip"></i> Thuật toán KNN 3D
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; width: 100%; padding-top: 10px; border-top: 1px dashed var(--border);">
+                    <div style="flex: 1;">
+                        <div style="font-size: 10px; color: var(--text-sub); font-weight: 600; text-transform: uppercase;">Bài tuần qua</div>
+                        <div style="font-size: 16px; font-weight: 800; color: var(--text-main);" th:text="${motivation['frequency']}">0</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 10px; color: var(--text-sub); font-weight: 600; text-transform: uppercase;">Chuỗi Streak</div>
+                        <div style="font-size: 16px; font-weight: 800; color: var(--text-main);" th:text="${motivation['streak']} + ' ngày'">0 ngày</div>
+                    </div>
+                </div>
             </div>
+            
         </div>
 
         <div class="section-header">
@@ -282,18 +306,20 @@ v<!DOCTYPE html>
         <div class="ai-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div style="font-size: 16px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-robot" style="color: var(--accent);"></i> Gợi ý nhóm
+                    <i class="fas fa-network-wired" style="color: var(--accent);"></i> Gợi ý thông minh
                 </div>
                 <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800;">
-                    <i class="fas fa-sparkles"></i> AI PICK
+                    <i class="fas fa-brain"></i> KNN AI
                 </div>
             </div>
             <p style="font-size: 13px; color: #92400e; margin-bottom: 20px; line-height: 1.5;">
-                Dựa trên <b>toàn bộ lịch sử học tập</b> của bạn, hãy tham gia các nhóm này:
+                Hệ thống dùng <b>Jaccard Similarity</b> tìm thấy 5 sinh viên có lộ trình giống hệt bạn đang tham gia:
             </p>
+            
             <div th:if="${aiGroups.isEmpty()}" style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-sub);">
-                Chưa tìm thấy nhóm phù hợp.
+                <i class="fas fa-search"></i> Hãy học thêm để AI phân tích lộ trình nhé!
             </div>
+            
             <a th:each="g : ${aiGroups}" th:href="@{'/student/groups/' + ${g.id}}" class="group-item">
                 <div class="gi-icon" th:text="${g.image != null ? g.image : '🎓'}">🎓</div>
                 <div style="flex: 1;">

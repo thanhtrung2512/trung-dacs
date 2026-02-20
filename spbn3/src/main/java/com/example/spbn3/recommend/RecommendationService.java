@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,15 +20,18 @@ public class RecommendationService {
     private final TopicRepository topicRepository;
     private final SubjectRepository subjectRepository;
     private final StudyGroupService studyGroupService;
+    private final StudentRepository studentRepository; // ĐÃ THÊM
 
     public RecommendationService(LearningHistoryRepository historyRepository,
                                  TopicRepository topicRepository,
                                  SubjectRepository subjectRepository,
-                                 StudyGroupService studyGroupService) {
+                                 StudyGroupService studyGroupService,
+                                 StudentRepository studentRepository) { // ĐÃ THÊM
         this.historyRepository = historyRepository;
         this.topicRepository = topicRepository;
         this.subjectRepository = subjectRepository;
         this.studyGroupService = studyGroupService;
+        this.studentRepository = studentRepository; // ĐÃ THÊM
     }
 
     // =================================================================
@@ -79,7 +84,11 @@ public class RecommendationService {
         
         // --- PHẦN THÊM MỚI ---
         // Lấy danh sách xu thế (trendingTopics) để hiển thị ngoài HTML
-        List<Topic> trending = topicRepository.findTrendingTopics(searchKey, 3);
+        List<Topic> trending = topicRepository.findTrendingTopicsByMajor(searchKey, 3);
+        if(trending.isEmpty()){
+            trending = topicRepository.findTopPopularTopics();
+            if(trending.size() > 3) trending = trending.subList(0, 3);
+        }
         analytics.put("trendingTopics", trending); 
         // ---------------------
 
@@ -221,5 +230,173 @@ public class RecommendationService {
             } else break;
         }
         return streak;
+    }
+
+    // =================================================================
+    // 🔥 8. AI NHẬN DIỆN ĐỘNG LỰC HỌC TẬP (WEIGHTED KNN 3D) 
+    // =================================================================
+    
+    // Lớp nội bộ để tạo các điểm mốc cho AI
+    private static class StudentFeatureVector {
+        double frequency; // F: Tần suất học 7 ngày qua
+        double recency;   // R: Số ngày từ lần cuối học
+        double streak;    // S: Chuỗi ngày học liên tục
+        String label;     // Trạng thái (Cao, Cháy bỏng...)
+        String color;
+        String icon;
+
+        public StudentFeatureVector(double f, double r, double s, String label, String color, String icon) {
+            this.frequency = f; this.recency = r; this.streak = s;
+            this.label = label; this.color = color; this.icon = icon;
+        }
+    }
+
+    // Tập dữ liệu huấn luyện (Các điểm lý tưởng)
+    private List<StudentFeatureVector> generateTrainingDataset() {
+        return Arrays.asList(
+            new StudentFeatureVector(15, 0, 7, "🔥 Cháy bỏng", "#dc2626", "fas fa-fire"),
+            new StudentFeatureVector(10, 0, 5, "🔥 Cháy bỏng", "#dc2626", "fas fa-fire"),
+            new StudentFeatureVector(6, 1, 3, "🚀 Tăng tốc", "#ea580c", "fas fa-rocket"),
+            new StudentFeatureVector(5, 2, 2, "🚀 Tăng tốc", "#ea580c", "fas fa-rocket"),
+            new StudentFeatureVector(2, 2, 1, "🐢 Ổn định", "#16a34a", "fas fa-walking"),
+            new StudentFeatureVector(1, 1, 1, "🐢 Ổn định", "#16a34a", "fas fa-walking"),
+            new StudentFeatureVector(0, 7, 0, "⚠️ Cần cố gắng", "#f59e0b", "fas fa-exclamation-circle"),
+            new StudentFeatureVector(0, 14, 0, "💤 Ngủ đông", "#64748b", "fas fa-bed")
+        );
+    }
+
+    // Hàm chuẩn hóa dữ liệu
+    private double normalize(double value, double min, double max) {
+        if (max - min == 0) return 0;
+        return (value - min) / (max - min);
+    }
+
+    // Hàm chính: Nhận diện Động Lực
+    public Map<String, Object> autoDetectMotivation(Long studentId) {
+        List<LearningHistory> histories = historyRepository.findByStudentIdOrderByViewedAtDesc(studentId);
+        
+        // Nếu user chưa học gì
+        if (histories.isEmpty()) {
+            return Map.of("label", "Khởi động", "color", "#94a3b8", "icon", "fas fa-seedling", "frequency", 0, "streak", 0);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime lastView = histories.get(0).getViewedAt();
+        
+        // Trích xuất 3 thông số của sinh viên
+        double myRecency = ChronoUnit.DAYS.between(lastView, now);
+        double myFrequency = histories.stream().filter(h -> h.getViewedAt().isAfter(now.minusDays(7))).count();
+        double myStreak = calculateDetailedStreak(histories);
+
+        List<StudentFeatureVector> dataset = generateTrainingDataset();
+        
+        // Tìm Max để chuẩn hóa
+        double maxF = Math.max(myFrequency, dataset.stream().mapToDouble(v -> v.frequency).max().orElse(20));
+        double maxR = Math.max(myRecency, dataset.stream().mapToDouble(v -> v.recency).max().orElse(30));
+        double maxS = Math.max(myStreak, dataset.stream().mapToDouble(v -> v.streak).max().orElse(10));
+
+        Map<StudentFeatureVector, Double> distances = new HashMap<>();
+
+        // Tính khoảng cách Euclid
+        for (StudentFeatureVector point : dataset) {
+            double dF = normalize(myFrequency, 0, maxF) - normalize(point.frequency, 0, maxF);
+            double dR = normalize(myRecency, 0, maxR) - normalize(point.recency, 0, maxR);
+            double dS = normalize(myStreak, 0, maxS) - normalize(point.streak, 0, maxS);
+            distances.put(point, Math.sqrt(dF*dF + dR*dR + dS*dS));
+        }
+
+        // Bầu chọn có trọng số (Top 3)
+        int K = 3;
+        Map<String, Double> weightedVotes = new HashMap<>();
+        Map<String, StudentFeatureVector> labelToVectorMap = new HashMap<>();
+
+        distances.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .limit(K)
+                .forEach(entry -> {
+                    double weight = 1.0 / (entry.getValue() + 0.0001); 
+                    weightedVotes.put(entry.getKey().label, weightedVotes.getOrDefault(entry.getKey().label, 0.0) + weight);
+                    labelToVectorMap.put(entry.getKey().label, entry.getKey());
+                });
+
+        // Chốt kết quả
+        String winningLabel = Collections.max(weightedVotes.entrySet(), Map.Entry.comparingByValue()).getKey();
+        StudentFeatureVector winningVector = labelToVectorMap.get(winningLabel);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("label", winningVector.label);
+        result.put("color", winningVector.color);
+        result.put("icon", winningVector.icon);
+        result.put("frequency", (int)myFrequency);
+        result.put("streak", (int)myStreak);
+        
+        return result;
+    }
+
+    // Helper tính chuỗi ngày học từ List<LearningHistory>
+    private double calculateDetailedStreak(List<LearningHistory> histories) {
+        if (histories.isEmpty()) return 0;
+        Set<LocalDate> activeDays = histories.stream()
+                .map(h -> h.getViewedAt().toLocalDate())
+                .collect(Collectors.toSet());
+        LocalDate today = LocalDate.now();
+        if (!activeDays.contains(today) && !activeDays.contains(today.minusDays(1))) return 0;
+        
+        double streak = 0;
+        LocalDate checkDate = activeDays.contains(today) ? today : today.minusDays(1);
+        while (activeDays.contains(checkDate)) {
+            streak++;
+            checkDate = checkDate.minusDays(1);
+        }
+        return streak;
+    }
+
+    // =================================================================
+    // 🔥 9. AI GỢI Ý NHÓM (KNN COLLABORATIVE FILTERING) - ĐÃ BỔ SUNG
+    // =================================================================
+    public List<StudyGroup> getKnnGroupRecommendations(Long currentStudentId) {
+        // Lấy vector bài học của sinh viên hiện tại
+        Set<Long> myTopicIds = historyRepository.findByStudentId(currentStudentId).stream()
+                .map(h -> h.getTopic().getId()).collect(Collectors.toSet());
+        
+        if (myTopicIds.isEmpty()) return new ArrayList<>();
+
+        List<Student> allStudents = studentRepository.findAll();
+        Map<Student, Double> similarityScores = new HashMap<>();
+
+        for (Student other : allStudents) {
+            if (other.getId().equals(currentStudentId)) continue;
+            
+            Set<Long> otherTopicIds = historyRepository.findByStudentId(other.getId()).stream()
+                    .map(h -> h.getTopic().getId()).collect(Collectors.toSet());
+            
+            // Công thức Jaccard Similarity (Giao chia Hợp)
+            Set<Long> intersection = new HashSet<>(myTopicIds); 
+            intersection.retainAll(otherTopicIds);
+            
+            Set<Long> union = new HashSet<>(myTopicIds); 
+            union.addAll(otherTopicIds);
+            
+            double similarity = union.isEmpty() ? 0.0 : (double) intersection.size() / union.size();
+            if (similarity > 0) similarityScores.put(other, similarity);
+        }
+
+        // Top 5 Hàng xóm giống bạn nhất
+        List<Student> kNearest = similarityScores.entrySet().stream()
+                .sorted(Map.Entry.<Student, Double>comparingByValue().reversed())
+                .limit(5).map(Map.Entry::getKey).collect(Collectors.toList());
+
+        Set<StudyGroup> recommendations = new LinkedHashSet<>();
+        List<StudyGroup> allGroups = studyGroupService.getAllGroups();
+        
+        // Lấy nhóm của 5 hàng xóm này để gợi ý cho bạn
+        for (Student neighbor : kNearest) {
+            for (StudyGroup g : allGroups) {
+                boolean neighborJoined = g.getParticipants().stream().anyMatch(s -> s.getId().equals(neighbor.getId()));
+                boolean iJoined = g.getParticipants().stream().anyMatch(s -> s.getId().equals(currentStudentId));
+                if (neighborJoined && !iJoined) recommendations.add(g);
+            }
+        }
+        return new ArrayList<>(recommendations);
     }
 }

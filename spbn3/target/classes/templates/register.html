@@ -1,81 +1,247 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng ký tài khoản</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký tài khoản | LMS Pro</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #eef2f3; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 400px; }
-        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #eef2ff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --bg: #f8fafc;
+            --border: #e2e8f0;
+            --radius: 16px;
+        }
+
+        body { 
+            font-family: 'Be Vietnam Pro', sans-serif; 
+            background: var(--bg); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .box { 
+            background: white; 
+            padding: 40px; 
+            border-radius: var(--radius); 
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 450px; 
+            border: 1px solid var(--border);
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-container i {
+            font-size: 32px;
+            color: var(--primary);
+            background: var(--primary-light);
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+        }
+
+        h2 { 
+            text-align: center; 
+            font-weight: 800; 
+            font-size: 24px; 
+            margin: 0 0 10px 0; 
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
         
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 14px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        input:focus, select:focus { border-color: #4f46e5; outline: none; }
+        .form-group { margin-bottom: 20px; position: relative; }
         
-        button { width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        button:hover { background: #4338ca; }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 700; 
+            color: var(--text-main); 
+            font-size: 13px; 
+        }
+
+        .input-icon-wrapper {
+            position: relative;
+        }
+
+        .input-icon-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        input, select { 
+            width: 100%; 
+            padding: 12px 15px 12px 40px; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            font-family: inherit;
+            font-size: 14px;
+            transition: 0.3s;
+            background: #f8fafc;
+        }
+        
+        input:focus, select:focus { 
+            border-color: var(--primary); 
+            outline: none; 
+            background: white;
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+        
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            font-size: 15px;
+            cursor: pointer; 
+            margin-top: 10px; 
+            transition: 0.3s; 
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+        
+        button:hover { 
+            background: var(--primary-dark); 
+            transform: translateY(-2px);
+        }
         
         .hidden { display: none; }
-        .back-link { text-align: center; margin-top: 15px; font-size: 14px; }
-        .back-link a { text-decoration: none; color: #4f46e5; }
+        
+        .back-link { 
+            text-align: center; 
+            margin-top: 25px; 
+            font-size: 14px; 
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+        
+        .back-link a { 
+            text-decoration: none; 
+            color: var(--primary); 
+            font-weight: 700;
+            transition: 0.3s;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>Đăng Ký Hệ Thống</h2>
+    <div class="logo-container">
+        <i class="fas fa-bolt"></i>
+        <h2>LMS Pro</h2>
+        <p class="subtitle">Khởi tạo tài khoản học tập của bạn</p>
+    </div>
 
     <div class="form-group">
         <label>Tên đăng nhập (*)</label>
-        <input type="text" id="username" placeholder="Ví dụ: sv2024">
+        <div class="input-icon-wrapper">
+            <i class="fas fa-user"></i>
+            <input type="text" id="username" placeholder="Ví dụ: sv2024">
+        </div>
     </div>
 
     <div class="form-group">
         <label>Mật khẩu (*)</label>
-        <input type="password" id="password" placeholder="******">
+        <div class="input-icon-wrapper">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" placeholder="******">
+        </div>
     </div>
 
     <div class="form-group">
         <label>Họ và tên (*)</label>
-        <input type="text" id="fullName" placeholder="Nguyễn Văn A">
+        <div class="input-icon-wrapper">
+            <i class="fas fa-id-card"></i>
+            <input type="text" id="fullName" placeholder="Nguyễn Văn A">
+        </div>
     </div>
     
     <div class="form-group">
         <label>Email (*)</label>
-        <input type="email" id="email" placeholder="email@example.com">
+        <div class="input-icon-wrapper">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" placeholder="email@example.com">
+        </div>
     </div>
 
     <div class="form-group">
         <label>Bạn là ai?</label>
-        <select id="role" onchange="toggleFields()">
-            <option value="STUDENT">Sinh viên</option>
-            <option value="ADMIN">Giảng viên / Quản trị</option>
-        </select>
+        <div class="input-icon-wrapper">
+            <i class="fas fa-user-tag"></i>
+            <select id="role" onchange="toggleFields()">
+                <option value="STUDENT">👨‍🎓 Sinh viên</option>
+                <option value="ADMIN">👨‍🏫 Giảng viên / Quản trị</option>
+            </select>
+        </div>
     </div>
 
     <div id="studentFields">
         <div class="form-group">
             <label>Chuyên ngành (*)</label>
-            <input type="text" id="major" placeholder="CNTT, Kinh tế...">
+            <div class="input-icon-wrapper">
+                <i class="fas fa-graduation-cap"></i>
+                <select id="major">
+                    <option value="">-- Chọn chuyên ngành --</option>
+                    <option th:each="m : ${majors}" th:value="${m}" th:text="${m}">Công nghệ thông tin</option>
+                </select>
+            </div>
         </div>
         <div class="form-group">
             <label>Năm học (Sinh viên năm mấy?)</label>
-            <input type="number" id="year" placeholder="1, 2, 3, 4" min="1" max="6">
+            <div class="input-icon-wrapper">
+                <i class="fas fa-calendar-alt"></i>
+                <input type="number" id="year" placeholder="Ví dụ: 1, 2, 3, 4" min="1" max="6">
+            </div>
         </div>
     </div>
 
     <div id="adminFields" class="hidden">
         <div class="form-group">
             <label>Chức vụ / Vị trí (*)</label>
-            <input type="text" id="position" placeholder="Trưởng phòng, Giảng viên...">
+            <div class="input-icon-wrapper">
+                <i class="fas fa-briefcase"></i>
+                <input type="text" id="position" placeholder="Trưởng phòng, Giảng viên...">
+            </div>
         </div>
     </div>
 
-    <button onclick="register()">Đăng Ký Ngay</button>
+    <button onclick="register()">Đăng Ký Ngay <i class="fas fa-arrow-right" style="margin-left: 5px;"></i></button>
     
     <div class="back-link">
-        Đã có tài khoản? <a href="/">Đăng nhập</a>
+        Đã có tài khoản? <a href="/">Đăng nhập ngay</a>
     </div>
 </div>
 
@@ -110,6 +276,12 @@
         // Validate cơ bản
         if(!data.username || !data.password || !data.fullName) {
             alert("Vui lòng điền đầy đủ thông tin bắt buộc!");
+            return;
+        }
+
+        // Nếu là sinh viên thì bắt buộc phải chọn ngành
+        if(role === 'STUDENT' && !data.major) {
+            alert("Vui lòng chọn Chuyên ngành!");
             return;
         }
 

@@ -89,4 +89,12 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
     // 2. Lấy danh sách môn theo ngành (Dùng cho Roadmap đầy đủ)
     List<Subject> findByTargetMajorContainingIgnoreCaseOrderBySemesterAsc(String targetMajor);
     List<Subject> findByTargetMajorOrderBySemesterAsc(String targetMajor);
+
+    // ==========================================
+    // 🌟 PHẦN 4: HÀM HỖ TRỢ ĐĂNG KÝ TÀI KHOẢN
+    // ==========================================
+    
+    // Lấy danh sách các ngành học không trùng lặp để hiển thị Dropdown
+    @Query("SELECT DISTINCT s.targetMajor FROM Subject s WHERE s.targetMajor IS NOT NULL")
+    List<String> findDistinctTargetMajors();
 }

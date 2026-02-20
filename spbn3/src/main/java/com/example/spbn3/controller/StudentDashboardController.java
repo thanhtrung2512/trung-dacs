@@ -43,7 +43,7 @@ public class StudentDashboardController {
             // Thêm thông tin sinh viên để hiển thị tên, avatar...
             model.addAttribute("student", student);
             
-            // ❌ ĐÃ XÓA DÒNG GÂY LỖI (recommendationService.getRecommendedGroups)
+            
         }
         
         return "student/dashboard";

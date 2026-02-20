@@ -2,22 +2,27 @@ package com.example.spbn3.controller;
 
 import com.example.spbn3.entity.User;
 import com.example.spbn3.service.UserService;
+import com.example.spbn3.repository.SubjectRepository; // Đã thêm
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model; // Đã thêm
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List; // Đã thêm
 import java.util.Map;
 
 @Controller
 public class AuthController {
 
     private final UserService userService;
+    private final SubjectRepository subjectRepository; // Đã thêm để lấy danh sách ngành
 
-    // Chỉ cần Inject UserService là đủ (vì UserService đã gọi các Repo con)
-    public AuthController(UserService userService) {
+    // Inject thêm SubjectRepository vào Constructor
+    public AuthController(UserService userService, SubjectRepository subjectRepository) {
         this.userService = userService;
+        this.subjectRepository = subjectRepository;
     }
 
     // =========================
@@ -28,9 +33,12 @@ public class AuthController {
         return "index";
     }
 
+    // ĐÃ SỬA: Đẩy danh sách ngành học từ Database sang HTML
     @GetMapping("/register")
-    public String showRegisterPage() {
-        return "register"; // Trả về file templates/register.html
+    public String showRegisterPage(Model model) {
+        List<String> distinctMajors = subjectRepository.findDistinctTargetMajors();
+        model.addAttribute("majors", distinctMajors);
+        return "register"; 
     }
 
     @GetMapping("/logout")
@@ -46,7 +54,7 @@ public class AuthController {
     @ResponseBody
     public ResponseEntity<?> login(@RequestParam String username, 
                                    @RequestParam String password, 
-                                   @RequestParam String role, // Nhận thêm role để check quyền
+                                   @RequestParam String role, 
                                    HttpSession session) {
         
         User user = userService.login(username, password);
@@ -55,8 +63,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Sai tài khoản hoặc mật khẩu");
         }
 
-        // Kiểm tra xem người dùng có chọn đúng vai trò không
-        // VD: Tài khoản là Student nhưng lại chọn đăng nhập Admin -> Chặn
         if (!user.getRole().name().equals(role)) {
             return ResponseEntity.badRequest().body("Bạn không có quyền truy cập với vai trò này!");
         }
@@ -67,23 +73,22 @@ public class AuthController {
 
         Map<String, Object> res = new HashMap<>();
         res.put("username", user.getUsername());
-        res.put("role", user.getRole().name()); // Trả về role để FE điều hướng
+        res.put("role", user.getRole().name()); 
 
         return ResponseEntity.ok(res);
     }
 
     // =========================
-    // 🔥 3. API ĐĂNG KÝ (SỬA LẠI ĐỂ KHỚP VỚI USER SERVICE)
+    // 🔥 3. API ĐĂNG KÝ
     // =========================
     @PostMapping("/api/auth/register")
     @ResponseBody
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
         try {
-            // Gọi hàm registerUser trong UserService (Hàm này đã xử lý Admin/Student)
             userService.registerUser(request);
             return ResponseEntity.ok("Đăng ký thành công! Vui lòng đăng nhập.");
         } catch (Exception e) {
-            e.printStackTrace(); // In lỗi ra console để dễ debug
+            e.printStackTrace(); 
             return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
         }
     }
